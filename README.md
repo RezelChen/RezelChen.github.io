@@ -1,2 +1,1 @@
-# RezelChen.github.io
-Personal blog
+# Personal blog
