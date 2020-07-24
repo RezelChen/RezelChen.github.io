@@ -197,7 +197,7 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
-    <link itemprop="mainEntityOfPage" href="https://rezelchen.github.io/2020/05/27/DDIA/">
+    <link itemprop="mainEntityOfPage" href="https://rezelchen.github.io/2020/05/27/DDIA1/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="image" content="/blog/images/avatar.gif">
@@ -211,7 +211,7 @@
       <header class="post-header">
         <h2 class="post-title" itemprop="name headline">
           
-            <a href="/blog/2020/05/27/DDIA/" class="post-title-link" itemprop="url">Note for DDIA</a>
+            <a href="/blog/2020/05/27/DDIA1/" class="post-title-link" itemprop="url">Note for DDIA in Chapter 1</a>
         </h2>
 
         <div class="post-meta">
@@ -228,7 +228,7 @@
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">Edited on</span>
-                <time title="Modified: 2020-07-24 04:28:31" itemprop="dateModified" datetime="2020-07-24T04:28:31+00:00">2020-07-24</time>
+                <time title="Modified: 2020-07-24 11:38:10" itemprop="dateModified" datetime="2020-07-24T11:38:10+00:00">2020-07-24</time>
               </span>
 
           
@@ -242,13 +242,24 @@
     <div class="post-body" itemprop="articleBody">
 
       
-          <h2 id="Chapter-1"><a href="#Chapter-1" class="headerlink" title="Chapter 1"></a>Chapter 1</h2><h3 id="Reliability"><a href="#Reliability" class="headerlink" title="Reliability"></a>Reliability</h3><ul>
+          <h3 id="Reliability"><a href="#Reliability" class="headerlink" title="Reliability"></a>Reliability</h3><ul>
 <li>The application performs the function that the user expected.</li>
 <li>It can tolerate the user making mistakes or using the software in unexpected ways.</li>
 <li>Its performance is good enough for the required use case, under the expected load and data volume.</li>
 <li>The system prevents any unauthorized access and abuse.</li>
 </ul>
-<h3 id="Scalability"><a href="#Scalability" class="headerlink" title="Scalability"></a>Scalability</h3><h3 id="Maintainability"><a href="#Maintainability" class="headerlink" title="Maintainability"></a>Maintainability</h3>
+<h3 id="Scalability"><a href="#Scalability" class="headerlink" title="Scalability"></a>Scalability</h3><h4 id="Describing-Load"><a href="#Describing-Load" class="headerlink" title="Describing Load"></a>Describing Load</h4><p>Load can be described with a few numbers which we call <em>load parameters</em>. The best choice of parameters depends on the architecture of your system: it may be requests per second to a web server, the ratio of reads to writes in a database, the number of simultaneously active users in a chat room, the hit rate on a cache, or something else. Perhaps the average case is what matters for you, or perhaps your bottleneck is dominated by a small number of extreme cases.</p>
+<h4 id="Describing-Performance"><a href="#Describing-Performance" class="headerlink" title="Describing Performance"></a>Describing Performance</h4><ul>
+<li>throughput — the number of records we can process per second</li>
+<li>the total time it takes to run a job on a dataset of a certain size</li>
+<li>response time — the time between a client sending a request and receiving a response</li>
+<li>latency is the duration that a request is waiting to be handled—during which it is <em>latent</em>, awaiting service</li>
+</ul>
+<p>High percentiles of response times, also known as <em>tail latencies</em>, are important because they directly affect users’ experience of the service.</p>
+<h4 id="Approaches-for-Coping-with-Load"><a href="#Approaches-for-Coping-with-Load" class="headerlink" title="Approaches for Coping with Load"></a>Approaches for Coping with Load</h4><p>While distributing stateless services across multiple machines is fairly straightfor‐ ward, taking stateful data systems from a single node to a distributed setup can intro‐ duce a lot of additional complexity.</p>
+<p>An architecture that scales well for a particular application is built around assumptions of which operations will be common and which will be rare — the load parameters.</p>
+<p>Even though they are specific to a particular application, scalable architectures are nevertheless usually built from general-purpose building blocks, arranged in familiar patterns.</p>
+<h3 id="Maintainability"><a href="#Maintainability" class="headerlink" title="Maintainability"></a>Maintainability</h3><h4 id="Operability-Making-Life-Easy-for-Operations"><a href="#Operability-Making-Life-Easy-for-Operations" class="headerlink" title="Operability: Making Life Easy for Operations"></a>Operability: Making Life Easy for Operations</h4><h4 id="Simplicity-Managing-Complexity"><a href="#Simplicity-Managing-Complexity" class="headerlink" title="Simplicity: Managing Complexity"></a>Simplicity: Managing Complexity</h4><h4 id="Evolvability-Making-Change-Easy"><a href="#Evolvability-Making-Change-Easy" class="headerlink" title="Evolvability: Making Change Easy"></a>Evolvability: Making Change Easy</h4>
       
     </div>
 
@@ -298,7 +309,7 @@
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">Edited on</span>
-                <time title="Modified: 2020-07-24 04:28:31" itemprop="dateModified" datetime="2020-07-24T04:28:31+00:00">2020-07-24</time>
+                <time title="Modified: 2020-07-24 11:38:10" itemprop="dateModified" datetime="2020-07-24T11:38:10+00:00">2020-07-24</time>
               </span>
 
           
