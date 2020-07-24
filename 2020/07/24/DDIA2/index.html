@@ -22,28 +22,33 @@
     var CONFIG = {"hostname":"rezelchen.github.io","root":"/blog/","scheme":"Muse","version":"8.0.0-rc.4","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12},"copycode":false,"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}}};
   </script>
 
-  <meta property="og:type" content="website">
-<meta property="og:title" content="Ray Chen&#39;s Blog">
-<meta property="og:url" content="https://rezelchen.github.io/index.html">
+  <meta name="description" content="Data Models and Query LanguagesRelational Model Versus Document ModelMany-to-One and Many-to-Many RelationshipsRemoving such duplication is the key idea behind normalization in databases. As a rule of">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Note for DDIA in Chapter 2">
+<meta property="og:url" content="https://rezelchen.github.io/2020/07/24/DDIA2/index.html">
 <meta property="og:site_name" content="Ray Chen&#39;s Blog">
+<meta property="og:description" content="Data Models and Query LanguagesRelational Model Versus Document ModelMany-to-One and Many-to-Many RelationshipsRemoving such duplication is the key idea behind normalization in databases. As a rule of">
 <meta property="og:locale" content="en_US">
+<meta property="article:published_time" content="2020-07-24T18:54:40.000Z">
+<meta property="article:modified_time" content="2020-07-24T15:04:40.956Z">
 <meta property="article:author" content="Ray Chen">
+<meta property="article:tag" content="note">
 <meta name="twitter:card" content="summary">
 
-<link rel="canonical" href="https://rezelchen.github.io/">
+<link rel="canonical" href="https://rezelchen.github.io/2020/07/24/DDIA2/">
 
 
 <script class="page-configurations">
   // https://hexo.io/docs/variables.html
   CONFIG.page = {
     sidebar: "",
-    isHome : true,
-    isPost : false,
+    isHome : false,
+    isPost : true,
     lang   : 'en'
   };
 </script>
 
-  <title>Ray Chen's Blog</title>
+  <title>Note for DDIA in Chapter 2 | Ray Chen's Blog</title>
   
 
 
@@ -132,7 +137,7 @@
 
   <aside class="sidebar">
 
-    <div class="sidebar-inner sidebar-overview-active">
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
       <ul class="sidebar-nav">
         <li class="sidebar-nav-toc">
           Table of Contents
@@ -144,6 +149,7 @@
 
       <!--noindex-->
       <section class="post-toc-wrap sidebar-panel">
+          <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#Data-Models-and-Query-Languages"><span class="nav-number">1.</span> <span class="nav-text">Data Models and Query Languages</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Relational-Model-Versus-Document-Model"><span class="nav-number">1.1.</span> <span class="nav-text">Relational Model Versus Document Model</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#Many-to-One-and-Many-to-Many-Relationships"><span class="nav-number">1.1.1.</span> <span class="nav-text">Many-to-One and Many-to-Many Relationships</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Are-Document-Databases-Repeating-History"><span class="nav-number">1.1.2.</span> <span class="nav-text">Are Document Databases Repeating History?</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#The-network-model"><span class="nav-number">1.1.2.1.</span> <span class="nav-text">The network model</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#The-relational-model"><span class="nav-number">1.1.2.2.</span> <span class="nav-text">The relational model</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#Comparison-to-document-databases"><span class="nav-number">1.1.2.3.</span> <span class="nav-text">Comparison to document databases</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Relational-Versus-Document-Databases-Today"><span class="nav-number">1.1.3.</span> <span class="nav-text">Relational Versus Document Databases Today</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#Which-data-model-leads-to-simpler-application-code"><span class="nav-number">1.1.3.1.</span> <span class="nav-text">Which data model leads to simpler application code?</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#Schema-flexibility-in-the-document-model"><span class="nav-number">1.1.3.2.</span> <span class="nav-text">Schema flexibility in the document model</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#Data-locality-for-queries"><span class="nav-number">1.1.3.3.</span> <span class="nav-text">Data locality for queries</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#Convergence-of-document-and-relational-databases"><span class="nav-number">1.1.3.4.</span> <span class="nav-text">Convergence of document and relational databases</span></a></li></ol></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Query-Languages-for-Data"><span class="nav-number">1.2.</span> <span class="nav-text">Query Languages for Data</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#Declarative-Queries-on-the-Web"><span class="nav-number">1.2.1.</span> <span class="nav-text">Declarative Queries on the Web</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#MapReduce-Querying"><span class="nav-number">1.2.2.</span> <span class="nav-text">MapReduce Querying</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Graph-Like-Data-Models"><span class="nav-number">1.3.</span> <span class="nav-text">Graph-Like Data Models</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#Property-Graphs"><span class="nav-number">1.3.1.</span> <span class="nav-text">Property Graphs</span></a></li></ol></li></ol></li></ol></div>
       </section>
       <!--/noindex-->
 
@@ -191,9 +197,10 @@
       <div class="main-inner">
         
 
-        <div class="content index posts-expand">
+        <div class="content post posts-expand">
           
-      
+
+    
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
@@ -209,10 +216,9 @@
       <meta itemprop="name" content="Ray Chen's Blog">
     </span>
       <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/blog/2020/07/24/DDIA2/" class="post-title-link" itemprop="url">Note for DDIA in Chapter 2</a>
-        </h2>
+        <h1 class="post-title" itemprop="name headline">
+          Note for DDIA in Chapter 2
+        </h1>
 
         <div class="post-meta">
             <span class="post-meta-item">
@@ -236,7 +242,7 @@
     <div class="post-body" itemprop="articleBody">
 
       
-          <h2 id="Data-Models-and-Query-Languages"><a href="#Data-Models-and-Query-Languages" class="headerlink" title="Data Models and Query Languages"></a>Data Models and Query Languages</h2><h3 id="Relational-Model-Versus-Document-Model"><a href="#Relational-Model-Versus-Document-Model" class="headerlink" title="Relational Model Versus Document Model"></a>Relational Model Versus Document Model</h3><h4 id="Many-to-One-and-Many-to-Many-Relationships"><a href="#Many-to-One-and-Many-to-Many-Relationships" class="headerlink" title="Many-to-One and Many-to-Many Relationships"></a>Many-to-One and Many-to-Many Relationships</h4><p>Removing such duplication is the key idea behind <em>normalization</em> in databases.</p>
+        <h2 id="Data-Models-and-Query-Languages"><a href="#Data-Models-and-Query-Languages" class="headerlink" title="Data Models and Query Languages"></a>Data Models and Query Languages</h2><h3 id="Relational-Model-Versus-Document-Model"><a href="#Relational-Model-Versus-Document-Model" class="headerlink" title="Relational Model Versus Document Model"></a>Relational Model Versus Document Model</h3><h4 id="Many-to-One-and-Many-to-Many-Relationships"><a href="#Many-to-One-and-Many-to-Many-Relationships" class="headerlink" title="Many-to-One and Many-to-Many Relationships"></a>Many-to-One and Many-to-Many Relationships</h4><p>Removing such duplication is the key idea behind <em>normalization</em> in databases.</p>
 <p>As a rule of thumb, if you’re duplicating values that could be stored in just one place, the schema is not normalized.</p>
 <h4 id="Are-Document-Databases-Repeating-History"><a href="#Are-Document-Databases-Repeating-History" class="headerlink" title="Are Document Databases Repeating History?"></a>Are Document Databases Repeating History?</h4><h5 id="The-network-model"><a href="#The-network-model" class="headerlink" title="The network model"></a>The network model</h5><h5 id="The-relational-model"><a href="#The-relational-model" class="headerlink" title="The relational model"></a>The relational model</h5><h5 id="Comparison-to-document-databases"><a href="#Comparison-to-document-databases" class="headerlink" title="Comparison to document databases"></a>Comparison to document databases</h5><h4 id="Relational-Versus-Document-Databases-Today"><a href="#Relational-Versus-Document-Databases-Today" class="headerlink" title="Relational Versus Document Databases Today"></a>Relational Versus Document Databases Today</h4><h5 id="Which-data-model-leads-to-simpler-application-code"><a href="#Which-data-model-leads-to-simpler-application-code" class="headerlink" title="Which data model leads to simpler application code?"></a>Which data model leads to simpler application code?</h5><h5 id="Schema-flexibility-in-the-document-model"><a href="#Schema-flexibility-in-the-document-model" class="headerlink" title="Schema flexibility in the document model"></a>Schema flexibility in the document model</h5><p>A more accurate term is schema-on-read (the structure of the data is implicit, and only interpreted when the data is read), in contrast with schema-on-write (the traditional approach of relational databases, where the schema is explicit and the database ensures all written data conforms to it)</p>
 <h5 id="Data-locality-for-queries"><a href="#Data-locality-for-queries" class="headerlink" title="Data locality for queries"></a>Data locality for queries</h5><h5 id="Convergence-of-document-and-relational-databases"><a href="#Convergence-of-document-and-relational-databases" class="headerlink" title="Convergence of document and relational databases"></a>Convergence of document and relational databases</h5><p>A hybrid of the relational and document models is a good route for databases to take in the future.</p>
@@ -261,167 +267,33 @@
 </ul>
 <p>You can think of a graph store as consisting of two relational tables, one for vertices and one for edges</p>
 
-      
     </div>
 
     
     
     
+
       <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
+          <div class="post-tags">
+              <a href="/blog/tags/note/" rel="tag"># note</a>
+          </div>
 
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
-    <link itemprop="mainEntityOfPage" href="https://rezelchen.github.io/2020/05/27/DDIA1/">
+        
 
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/blog/images/avatar.gif">
-      <meta itemprop="name" content="Ray Chen">
-      <meta itemprop="description" content="">
-    </span>
 
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Ray Chen's Blog">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/blog/2020/05/27/DDIA1/" class="post-title-link" itemprop="url">Note for DDIA in Chapter 1</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-calendar"></i>
-              </span>
-              <span class="post-meta-item-text">Posted on</span>
-
-              <time title="Created: 2020-05-27 22:54:40" itemprop="dateCreated datePublished" datetime="2020-05-27T22:54:40+00:00">2020-05-27</time>
-            </span>
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="far fa-calendar-check"></i>
-                </span>
-                <span class="post-meta-item-text">Edited on</span>
-                <time title="Modified: 2020-07-24 15:04:40" itemprop="dateModified" datetime="2020-07-24T15:04:40+00:00">2020-07-24</time>
-              </span>
-
-          
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <h3 id="Reliability"><a href="#Reliability" class="headerlink" title="Reliability"></a>Reliability</h3><ul>
-<li>The application performs the function that the user expected.</li>
-<li>It can tolerate the user making mistakes or using the software in unexpected ways.</li>
-<li>Its performance is good enough for the required use case, under the expected load and data volume.</li>
-<li>The system prevents any unauthorized access and abuse.</li>
-</ul>
-<h3 id="Scalability"><a href="#Scalability" class="headerlink" title="Scalability"></a>Scalability</h3><h4 id="Describing-Load"><a href="#Describing-Load" class="headerlink" title="Describing Load"></a>Describing Load</h4><p>Load can be described with a few numbers which we call <em>load parameters</em>. The best choice of parameters depends on the architecture of your system: it may be requests per second to a web server, the ratio of reads to writes in a database, the number of simultaneously active users in a chat room, the hit rate on a cache, or something else. Perhaps the average case is what matters for you, or perhaps your bottleneck is dominated by a small number of extreme cases.</p>
-<h4 id="Describing-Performance"><a href="#Describing-Performance" class="headerlink" title="Describing Performance"></a>Describing Performance</h4><ul>
-<li>throughput — the number of records we can process per second</li>
-<li>the total time it takes to run a job on a dataset of a certain size</li>
-<li>response time — the time between a client sending a request and receiving a response</li>
-<li>latency is the duration that a request is waiting to be handled—during which it is <em>latent</em>, awaiting service</li>
-</ul>
-<p>High percentiles of response times, also known as <em>tail latencies</em>, are important because they directly affect users’ experience of the service.</p>
-<h4 id="Approaches-for-Coping-with-Load"><a href="#Approaches-for-Coping-with-Load" class="headerlink" title="Approaches for Coping with Load"></a>Approaches for Coping with Load</h4><p>While distributing stateless services across multiple machines is fairly straightfor‐ ward, taking stateful data systems from a single node to a distributed setup can intro‐ duce a lot of additional complexity.</p>
-<p>An architecture that scales well for a particular application is built around assumptions of which operations will be common and which will be rare — the load parameters.</p>
-<p>Even though they are specific to a particular application, scalable architectures are nevertheless usually built from general-purpose building blocks, arranged in familiar patterns.</p>
-<h3 id="Maintainability"><a href="#Maintainability" class="headerlink" title="Maintainability"></a>Maintainability</h3><h4 id="Operability-Making-Life-Easy-for-Operations"><a href="#Operability-Making-Life-Easy-for-Operations" class="headerlink" title="Operability: Making Life Easy for Operations"></a>Operability: Making Life Easy for Operations</h4><h4 id="Simplicity-Managing-Complexity"><a href="#Simplicity-Managing-Complexity" class="headerlink" title="Simplicity: Managing Complexity"></a>Simplicity: Managing Complexity</h4><h4 id="Evolvability-Making-Change-Easy"><a href="#Evolvability-Making-Change-Easy" class="headerlink" title="Evolvability: Making Change Easy"></a>Evolvability: Making Change Easy</h4>
-      
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/blog/2020/05/27/DDIA1/" rel="prev" title="Note for DDIA in Chapter 1">
+      <i class="fa fa-chevron-left"></i> Note for DDIA in Chapter 1
+    </a></div>
+      <div class="post-nav-item"></div>
     </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
       </footer>
+    
   </article>
   
   
-  
-
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
-    <link itemprop="mainEntityOfPage" href="https://rezelchen.github.io/2019/12/26/My-New-Post/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/blog/images/avatar.gif">
-      <meta itemprop="name" content="Ray Chen">
-      <meta itemprop="description" content="">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Ray Chen's Blog">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/blog/2019/12/26/My-New-Post/" class="post-title-link" itemprop="url">Hello World</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-calendar"></i>
-              </span>
-              <span class="post-meta-item-text">Posted on</span>
-
-              <time title="Created: 2019-12-26 21:47:09" itemprop="dateCreated datePublished" datetime="2019-12-26T21:47:09+00:00">2019-12-26</time>
-            </span>
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="far fa-calendar-check"></i>
-                </span>
-                <span class="post-meta-item-text">Edited on</span>
-                <time title="Modified: 2020-07-24 15:04:40" itemprop="dateModified" datetime="2020-07-24T15:04:40+00:00">2020-07-24</time>
-              </span>
-
-          
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <p>Hello Test</p>
-
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
-
   
 
 
