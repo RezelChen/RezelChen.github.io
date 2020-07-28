@@ -67,3 +67,6 @@ properties of edge:
 - A collection of properties (key-value pairs)
 
 You can think of a graph store as consisting of two relational tables, one for vertices and one for edges
+
+#### The Cypher Query Language
+...
