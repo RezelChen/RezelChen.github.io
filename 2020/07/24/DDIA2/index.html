@@ -30,7 +30,7 @@
 <meta property="og:description" content="Data Models and Query LanguagesRelational Model Versus Document ModelMany-to-One and Many-to-Many RelationshipsRemoving such duplication is the key idea behind normalization in databases. As a rule of">
 <meta property="og:locale" content="en_US">
 <meta property="article:published_time" content="2020-07-24T18:54:40.000Z">
-<meta property="article:modified_time" content="2020-07-24T15:04:40.956Z">
+<meta property="article:modified_time" content="2020-07-28T09:38:39.252Z">
 <meta property="article:author" content="Ray Chen">
 <meta property="article:tag" content="note">
 <meta name="twitter:card" content="summary">
@@ -149,7 +149,7 @@
 
       <!--noindex-->
       <section class="post-toc-wrap sidebar-panel">
-          <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#Data-Models-and-Query-Languages"><span class="nav-number">1.</span> <span class="nav-text">Data Models and Query Languages</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Relational-Model-Versus-Document-Model"><span class="nav-number">1.1.</span> <span class="nav-text">Relational Model Versus Document Model</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#Many-to-One-and-Many-to-Many-Relationships"><span class="nav-number">1.1.1.</span> <span class="nav-text">Many-to-One and Many-to-Many Relationships</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Are-Document-Databases-Repeating-History"><span class="nav-number">1.1.2.</span> <span class="nav-text">Are Document Databases Repeating History?</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#The-network-model"><span class="nav-number">1.1.2.1.</span> <span class="nav-text">The network model</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#The-relational-model"><span class="nav-number">1.1.2.2.</span> <span class="nav-text">The relational model</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#Comparison-to-document-databases"><span class="nav-number">1.1.2.3.</span> <span class="nav-text">Comparison to document databases</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Relational-Versus-Document-Databases-Today"><span class="nav-number">1.1.3.</span> <span class="nav-text">Relational Versus Document Databases Today</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#Which-data-model-leads-to-simpler-application-code"><span class="nav-number">1.1.3.1.</span> <span class="nav-text">Which data model leads to simpler application code?</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#Schema-flexibility-in-the-document-model"><span class="nav-number">1.1.3.2.</span> <span class="nav-text">Schema flexibility in the document model</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#Data-locality-for-queries"><span class="nav-number">1.1.3.3.</span> <span class="nav-text">Data locality for queries</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#Convergence-of-document-and-relational-databases"><span class="nav-number">1.1.3.4.</span> <span class="nav-text">Convergence of document and relational databases</span></a></li></ol></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Query-Languages-for-Data"><span class="nav-number">1.2.</span> <span class="nav-text">Query Languages for Data</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#Declarative-Queries-on-the-Web"><span class="nav-number">1.2.1.</span> <span class="nav-text">Declarative Queries on the Web</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#MapReduce-Querying"><span class="nav-number">1.2.2.</span> <span class="nav-text">MapReduce Querying</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Graph-Like-Data-Models"><span class="nav-number">1.3.</span> <span class="nav-text">Graph-Like Data Models</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#Property-Graphs"><span class="nav-number">1.3.1.</span> <span class="nav-text">Property Graphs</span></a></li></ol></li></ol></li></ol></div>
+          <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#Data-Models-and-Query-Languages"><span class="nav-number">1.</span> <span class="nav-text">Data Models and Query Languages</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Relational-Model-Versus-Document-Model"><span class="nav-number">1.1.</span> <span class="nav-text">Relational Model Versus Document Model</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#Many-to-One-and-Many-to-Many-Relationships"><span class="nav-number">1.1.1.</span> <span class="nav-text">Many-to-One and Many-to-Many Relationships</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Are-Document-Databases-Repeating-History"><span class="nav-number">1.1.2.</span> <span class="nav-text">Are Document Databases Repeating History?</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#The-network-model"><span class="nav-number">1.1.2.1.</span> <span class="nav-text">The network model</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#The-relational-model"><span class="nav-number">1.1.2.2.</span> <span class="nav-text">The relational model</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#Comparison-to-document-databases"><span class="nav-number">1.1.2.3.</span> <span class="nav-text">Comparison to document databases</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Relational-Versus-Document-Databases-Today"><span class="nav-number">1.1.3.</span> <span class="nav-text">Relational Versus Document Databases Today</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#Which-data-model-leads-to-simpler-application-code"><span class="nav-number">1.1.3.1.</span> <span class="nav-text">Which data model leads to simpler application code?</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#Schema-flexibility-in-the-document-model"><span class="nav-number">1.1.3.2.</span> <span class="nav-text">Schema flexibility in the document model</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#Data-locality-for-queries"><span class="nav-number">1.1.3.3.</span> <span class="nav-text">Data locality for queries</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#Convergence-of-document-and-relational-databases"><span class="nav-number">1.1.3.4.</span> <span class="nav-text">Convergence of document and relational databases</span></a></li></ol></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Query-Languages-for-Data"><span class="nav-number">1.2.</span> <span class="nav-text">Query Languages for Data</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#Declarative-Queries-on-the-Web"><span class="nav-number">1.2.1.</span> <span class="nav-text">Declarative Queries on the Web</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#MapReduce-Querying"><span class="nav-number">1.2.2.</span> <span class="nav-text">MapReduce Querying</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Graph-Like-Data-Models"><span class="nav-number">1.3.</span> <span class="nav-text">Graph-Like Data Models</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#Property-Graphs"><span class="nav-number">1.3.1.</span> <span class="nav-text">Property Graphs</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#The-Cypher-Query-Language"><span class="nav-number">1.3.2.</span> <span class="nav-text">The Cypher Query Language</span></a></li></ol></li></ol></li></ol></div>
       </section>
       <!--/noindex-->
 
@@ -167,7 +167,7 @@
         </a>
       </div>
       <div class="site-state-item site-state-tags">
-        <span class="site-state-item-count">2</span>
+        <span class="site-state-item-count">1</span>
         <span class="site-state-item-name">tags</span>
       </div>
   </nav>
@@ -226,10 +226,16 @@
                 <i class="far fa-calendar"></i>
               </span>
               <span class="post-meta-item-text">Posted on</span>
-              
 
-              <time title="Created: 2020-07-24 18:54:40 / Modified: 15:04:40" itemprop="dateCreated datePublished" datetime="2020-07-24T18:54:40+00:00">2020-07-24</time>
+              <time title="Created: 2020-07-24 18:54:40" itemprop="dateCreated datePublished" datetime="2020-07-24T18:54:40+00:00">2020-07-24</time>
             </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">Edited on</span>
+                <time title="Modified: 2020-07-28 09:38:39" itemprop="dateModified" datetime="2020-07-28T09:38:39+00:00">2020-07-28</time>
+              </span>
 
           
 
@@ -266,6 +272,7 @@
 <li>A collection of properties (key-value pairs)</li>
 </ul>
 <p>You can think of a graph store as consisting of two relational tables, one for vertices and one for edges</p>
+<h4 id="The-Cypher-Query-Language"><a href="#The-Cypher-Query-Language" class="headerlink" title="The Cypher Query Language"></a>The Cypher Query Language</h4><p>…</p>
 
     </div>
 
@@ -287,7 +294,10 @@
     <a href="/blog/2020/05/27/DDIA1/" rel="prev" title="Note for DDIA in Chapter 1">
       <i class="fa fa-chevron-left"></i> Note for DDIA in Chapter 1
     </a></div>
-      <div class="post-nav-item"></div>
+      <div class="post-nav-item">
+    <a href="/blog/2020/07/24/DDIA3/" rel="next" title="Note for DDIA in Chapter 3">
+      Note for DDIA in Chapter 3 <i class="fa fa-chevron-right"></i>
+    </a></div>
     </div>
       </footer>
     
