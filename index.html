@@ -156,7 +156,7 @@
   <nav class="site-state">
       <div class="site-state-item site-state-posts">
           <a href="/blog/archives">
-          <span class="site-state-item-count">3</span>
+          <span class="site-state-item-count">4</span>
           <span class="site-state-item-name">posts</span>
         </a>
       </div>
@@ -197,6 +197,119 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
+    <link itemprop="mainEntityOfPage" href="https://rezelchen.github.io/2020/07/28/DDIA4/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/blog/images/avatar.gif">
+      <meta itemprop="name" content="Ray Chen">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Ray Chen's Blog">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/blog/2020/07/28/DDIA4/" class="post-title-link" itemprop="url">Note for DDIA in Chapter 4</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+
+              <time title="Created: 2020-07-28 17:38:00" itemprop="dateCreated datePublished" datetime="2020-07-28T17:38:00+00:00">2020-07-28</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">Edited on</span>
+                <time title="Modified: 2020-08-08 12:23:42" itemprop="dateModified" datetime="2020-08-08T12:23:42+00:00">2020-08-08</time>
+              </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <h2 id="Encoding-and-Evolution"><a href="#Encoding-and-Evolution" class="headerlink" title="Encoding and Evolution"></a>Encoding and Evolution</h2><h3 id="Formats-for-Encoding-Data"><a href="#Formats-for-Encoding-Data" class="headerlink" title="Formats for Encoding Data"></a>Formats for Encoding Data</h3><h4 id="Language-Specific-Formats"><a href="#Language-Specific-Formats" class="headerlink" title="Language-Specific Formats"></a>Language-Specific Formats</h4><p>It’s generally a bad idea to use your language’s built-in encoding for anything other than very transient purposes.</p>
+<h4 id="JSON-XML-and-Binary-Variants"><a href="#JSON-XML-and-Binary-Variants" class="headerlink" title="JSON, XML, and Binary Variants"></a>JSON, XML, and Binary Variants</h4><h5 id="Binary-encoding"><a href="#Binary-encoding" class="headerlink" title="Binary encoding"></a>Binary encoding</h5><h4 id="Thrift-and-Protocol-Buffers"><a href="#Thrift-and-Protocol-Buffers" class="headerlink" title="Thrift and Protocol Buffers"></a>Thrift and Protocol Buffers</h4><p>…</p>
+<h4 id="Avro"><a href="#Avro" class="headerlink" title="Avro"></a>Avro</h4><p>…</p>
+<h4 id="The-Merits-of-Schemas"><a href="#The-Merits-of-Schemas" class="headerlink" title="The Merits of Schemas"></a>The Merits of Schemas</h4><ul>
+<li><p>They can be much more compact than the various “binary JSON” variants, since they can omit field names from the encoded data.</p>
+</li>
+<li><p>The schema is a valuable form of documentation, and because the schema is required for decoding, you can be sure that it is up to date (whereas manually maintained documentation may easily diverge from reality).</p>
+</li>
+<li><p>Keeping a database of schemas allows you to check forward and backward com‐ patibility of schema changes, before anything is deployed.</p>
+</li>
+<li><p>For users of statically typed programming languages, the ability to generate code from the schema is useful, since it enables type checking at compile time.</p>
+</li>
+</ul>
+<p>In summary, schema evolution allows the same kind of flexibility as schemaless/schema-on-read JSON databases provide, while also providing better guarantees about your data and better tooling.</p>
+<h3 id="Modes-of-Dataflow"><a href="#Modes-of-Dataflow" class="headerlink" title="Modes of Dataflow"></a>Modes of Dataflow</h3><h4 id="Dataflow-Through-Databases"><a href="#Dataflow-Through-Databases" class="headerlink" title="Dataflow Through Databases"></a>Dataflow Through Databases</h4><h5 id="Different-values-written-at-different-times"><a href="#Different-values-written-at-different-times" class="headerlink" title="Different values written at different times"></a>Different values written at different times</h5><p>Schema evolution thus allows the entire database to appear as if it was encoded with a single schema, even though the underlying storage may contain records encoded with various historical versions of the schema.</p>
+<h5 id="Archival-storage"><a href="#Archival-storage" class="headerlink" title="Archival storage"></a>Archival storage</h5><h4 id="Dataflow-Through-Services-REST-and-RPC"><a href="#Dataflow-Through-Services-REST-and-RPC" class="headerlink" title="Dataflow Through Services: REST and RPC"></a>Dataflow Through Services: REST and RPC</h4><h5 id="Web-services"><a href="#Web-services" class="headerlink" title="Web services"></a>Web services</h5><h5 id="The-problems-with-remote-procedure-calls-RPCs"><a href="#The-problems-with-remote-procedure-calls-RPCs" class="headerlink" title="The problems with remote procedure calls (RPCs)"></a>The problems with remote procedure calls (RPCs)</h5><p>Although RPC seems convenient at first, the approach is fundamentally flawed. A network request is very different from a local function call:</p>
+<ul>
+<li><p>A local function call is predictable and either succeeds or fails, depending only on parameters that are under your control. A network request is unpredictable: the request or response may be lost due to a network problem, or the remote machine may be slow or unavailable, and such problems are entirely outside of your control. </p>
+</li>
+<li><p>A network request has another possible outcome: it may return without a result, due to a timeout. </p>
+</li>
+<li><p>If you retry a failed network request, it could happen that the requests are actually getting through, and only the responses are getting lost. In that case, retrying will cause the action to be performed multiple times, unless you build a mechanism for deduplication (idempotence) into the protocol.</p>
+</li>
+<li><p>A network request is much slower than a function call, and its latency is also wildly variable.</p>
+</li>
+<li><p>When you call a local function, you can efficiently pass it references (pointers) to objects in local memory. When you make a network request, all those parameters need to be encoded into a sequence of bytes that can be sent over the network.</p>
+</li>
+<li><p>The client and the service may be implemented in different programming lan‐ guages, so the RPC framework must translate datatypes from one language into another.</p>
+</li>
+</ul>
+<h5 id="Current-directions-for-RPC"><a href="#Current-directions-for-RPC" class="headerlink" title="Current directions for RPC"></a>Current directions for RPC</h5><p>The main focus of RPC frameworks is on requests between services owned by the same organization, typically within the same datacenter.</p>
+<h5 id="Data-encoding-and-evolution-for-RPC"><a href="#Data-encoding-and-evolution-for-RPC" class="headerlink" title="Data encoding and evolution for RPC"></a>Data encoding and evolution for RPC</h5><p>We can make a simplifying assumption in the case of dataflow through services: it is reasonable to assume that all the servers will be updated first, and all the clients second. Thus, you only need backward compatibility on requests, and forward compatibility on responses.</p>
+<p>If a compatibility-breaking change is required, the service provider often ends up maintaining multiple versions of the service API side by side.</p>
+<h4 id="Message-Passing-Dataflow"><a href="#Message-Passing-Dataflow" class="headerlink" title="Message-Passing Dataflow"></a>Message-Passing Dataflow</h4><p>Using a message broker has several advantages compared to direct RPC:</p>
+<ul>
+<li><p>It can act as a buffer if the recipient is unavailable or overloaded, and thus improve system reliability.</p>
+</li>
+<li><p>It can automatically redeliver messages to a process that has crashed, and thus prevent messages from being lost.</p>
+</li>
+<li><p>It avoids the sender needing to know the IP address and port number of the recipient.</p>
+</li>
+<li><p>It allows one message to be sent to several recipients.</p>
+</li>
+<li><p>It logically decouples the sender from the recipient.</p>
+</li>
+</ul>
+<p>However, a difference compared to RPC is that message-passing communication is usually one-way: a sender normally doesn’t expect to receive a reply to its messages. </p>
+<h5 id="Message-brokers"><a href="#Message-brokers" class="headerlink" title="Message brokers"></a>Message brokers</h5><h5 id="Distributed-actor-frameworks"><a href="#Distributed-actor-frameworks" class="headerlink" title="Distributed actor frameworks"></a>Distributed actor frameworks</h5><p>The <em>actor model</em> is a programming model for concurrency in a single process. Each actor typically represents one client or entity, it may have some local state, and it communicates with other actors by sending and receiving asynchronous messages. Message delivery is not guaranteed: in certain error scenarios, mes‐ sages will be lost. Since each actor processes only one message at a time, it doesn’t need to worry about threads, and each actor can be scheduled independently by the framework.</p>
+<p>In <em>distributed actor frameworks</em>, this programming model is used to scale an applica‐ tion across multiple nodes. The same message-passing mechanism is used, no matter whether the sender and recipient are on the same node or different nodes. </p>
+
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
     <link itemprop="mainEntityOfPage" href="https://rezelchen.github.io/2020/07/24/DDIA3/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -228,7 +341,7 @@
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">Edited on</span>
-                <time title="Modified: 2020-07-28 09:38:39" itemprop="dateModified" datetime="2020-07-28T09:38:39+00:00">2020-07-28</time>
+                <time title="Modified: 2020-08-08 12:23:42" itemprop="dateModified" datetime="2020-08-08T12:23:42+00:00">2020-08-08</time>
               </span>
 
           
@@ -360,7 +473,7 @@
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">Edited on</span>
-                <time title="Modified: 2020-07-28 09:38:39" itemprop="dateModified" datetime="2020-07-28T09:38:39+00:00">2020-07-28</time>
+                <time title="Modified: 2020-08-08 12:23:42" itemprop="dateModified" datetime="2020-08-08T12:23:42+00:00">2020-08-08</time>
               </span>
 
           
@@ -449,7 +562,7 @@
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">Edited on</span>
-                <time title="Modified: 2020-07-28 09:38:39" itemprop="dateModified" datetime="2020-07-28T09:38:39+00:00">2020-07-28</time>
+                <time title="Modified: 2020-08-08 12:23:42" itemprop="dateModified" datetime="2020-08-08T12:23:42+00:00">2020-08-08</time>
               </span>
 
           
