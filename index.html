@@ -156,7 +156,7 @@
   <nav class="site-state">
       <div class="site-state-item site-state-posts">
           <a href="/blog/archives">
-          <span class="site-state-item-count">5</span>
+          <span class="site-state-item-count">6</span>
           <span class="site-state-item-name">posts</span>
         </a>
       </div>
@@ -197,6 +197,128 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
+    <link itemprop="mainEntityOfPage" href="https://rezelchen.github.io/2020/08/13/DDIA6/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/blog/images/avatar.gif">
+      <meta itemprop="name" content="Ray Chen">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Ray Chen's Blog">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/blog/2020/08/13/DDIA6/" class="post-title-link" itemprop="url">Note for DDIA in Chapter 6</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+
+              <time title="Created: 2020-08-13 21:43:00" itemprop="dateCreated datePublished" datetime="2020-08-13T21:43:00+00:00">2020-08-13</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">Edited on</span>
+                <time title="Modified: 2020-08-12 21:02:51" itemprop="dateModified" datetime="2020-08-12T21:02:51+00:00">2020-08-12</time>
+              </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <h2 id="Partitioning"><a href="#Partitioning" class="headerlink" title="Partitioning"></a>Partitioning</h2><p>In this chapter we will first look at different approaches for partitioning large datasets and observe how the indexing of data interacts with partitioning. We’ll then talk about rebalancing, which is necessary if you want to add or remove nodes in your cluster. Finally, we’ll get an overview of how databases route requests to the right par‐ titions and execute queries.</p>
+<h3 id="Partitioning-and-Replication"><a href="#Partitioning-and-Replication" class="headerlink" title="Partitioning and Replication"></a>Partitioning and Replication</h3><h3 id="Partitioning-of-Key-Value-Data"><a href="#Partitioning-of-Key-Value-Data" class="headerlink" title="Partitioning of Key-Value Data"></a>Partitioning of Key-Value Data</h3><h4 id="Partitioning-by-Key-Range"><a href="#Partitioning-by-Key-Range" class="headerlink" title="Partitioning by Key Range"></a>Partitioning by Key Range</h4><p>This partitioning strategy is used by Bigtable, its open source equivalent HBase, RethinkDB, and MongoDB before version 2.4.</p>
+<p>Within each partition, we can keep keys in sorted order. This has the advantage that range scans are easy, and you can treat the key as a concatenated index in order to fetch several related records in one query.</p>
+<p>However, the downside of key range partitioning is that certain access patterns can lead to <em>hot spots</em>.</p>
+<h4 id="Partitioning-by-Hash-of-Key"><a href="#Partitioning-by-Hash-of-Key" class="headerlink" title="Partitioning by Hash of Key"></a>Partitioning by Hash of Key</h4><p>A good hash function takes skewed data and makes it uniformly distributed. </p>
+<p>For partitioning purposes, the hash function need not be cryptographically strong: for example, Cassandra and MongoDB use MD5, and Voldemort uses the Fowler– Noll–Vo function. </p>
+<p>Unfortunately however, by using the hash of the key for partitioning we lose a nice property of key-range partitioning: the ability to do efficient range queries. </p>
+<h4 id="Skewed-Workloads-and-Relieving-Hot-Spots"><a href="#Skewed-Workloads-and-Relieving-Hot-Spots" class="headerlink" title="Skewed Workloads and Relieving Hot Spots"></a>Skewed Workloads and Relieving Hot Spots</h4><h3 id="Partitioning-and-Secondary-Indexes"><a href="#Partitioning-and-Secondary-Indexes" class="headerlink" title="Partitioning and Secondary Indexes"></a>Partitioning and Secondary Indexes</h3><p>The problem with secondary indexes is that they don’t map neatly to partitions. There are two main approaches to partitioning a database with secondary indexes: document-based partitioning and term-based partitioning.</p>
+<h4 id="Partitioning-Secondary-Indexes-by-Document"><a href="#Partitioning-Secondary-Indexes-by-Document" class="headerlink" title="Partitioning Secondary Indexes by Document"></a>Partitioning Secondary Indexes by Document</h4><p>In this indexing approach, each partition is completely separate: each partition main‐ tains its own secondary indexes, covering only the documents in that partition. For that reason, a document-partitioned index is also known as a local index (as opposed to a global index, described in the next section).</p>
+<p>You need to send the query to all partitions, and combine all the results you get back.</p>
+<p>This approach to querying a partitioned database is sometimes known as <em>scatter/ gather</em>, and it can make read queries on secondary indexes quite expensive. </p>
+<h4 id="Partitioning-Secondary-Indexes-by-Term"><a href="#Partitioning-Secondary-Indexes-by-Term" class="headerlink" title="Partitioning Secondary Indexes by Term"></a>Partitioning Secondary Indexes by Term</h4><p>A global index must also be partitioned, but it can be partitioned differently from the primary key index.</p>
+<p>We call this kind of index <em>term-partitioned</em>, because the term we’re looking for determines the partition of the index. </p>
+<p>The advantage of a global (term-partitioned) index over a document-partitioned index is that it can make reads more efficient: rather than doing scatter/gather over all partitions, a client only needs to make a request to the partition containing the term that it wants. However, the downside of a global index is that writes are slower and more complicated, because a write to a single document may now affect multiple partitions of the index (every term in the document might be on a different partition, on a different node).</p>
+<p>In practice, updates to global secondary indexes are often asynchronous (that is, if you read the index shortly after a write, the change you just made may not yet be reflected in the index).</p>
+<h3 id="Rebalancing-Partitions"><a href="#Rebalancing-Partitions" class="headerlink" title="Rebalancing Partitions"></a>Rebalancing Partitions</h3><p>The process of moving load from one node in the cluster to another is called <em>rebalancing</em>.</p>
+<p>No matter which partitioning scheme is used, rebalancing is usually expected to meet some minimum requirements:</p>
+<ul>
+<li><p>After rebalancing, the load (data storage, read and write requests) should be shared fairly between the nodes in the cluster.</p>
+</li>
+<li><p>While rebalancing is happening, the database should continue accepting reads and writes.</p>
+</li>
+<li><p>No more data than necessary should be moved between nodes, to make rebalancing fast and to minimize the network and disk I/O load.</p>
+</li>
+</ul>
+<h4 id="Strategies-for-Rebalancing"><a href="#Strategies-for-Rebalancing" class="headerlink" title="Strategies for Rebalancing"></a>Strategies for Rebalancing</h4><h5 id="How-not-to-do-it-hash-mod-N"><a href="#How-not-to-do-it-hash-mod-N" class="headerlink" title="How not to do it: hash mod N"></a>How not to do it: hash mod N</h5><p>When partitioning by the hash of a key, we said earlier that it’s best to divide the possible hashes into ranges and assign each range to a partition (e.g., assign key to partition 0 if 0 ≤ hash(key) &lt; b0, to partition 1 if b0 ≤ hash(key) &lt; b1, etc.).</p>
+<p>The problem with the mod N approach is that if the number of nodes N changes, most of the keys will need to be moved from one node to another. </p>
+<h5 id="Fixed-number-of-partitions"><a href="#Fixed-number-of-partitions" class="headerlink" title="Fixed number of partitions"></a>Fixed number of partitions</h5><p>Fortunately, there is a fairly simple solution: create many more partitions than there are nodes, and assign several partitions to each node.  For example, a database running on a cluster of 10 nodes may be split into 1,000 partitions from the outset so that approximately 100 partitions are assigned to each node.</p>
+<p>Now, if a node is added to the cluster, the new node can <em>steal</em> a few partitions from every existing node until partitions are fairly distributed once again. If a node is removed from the cluster, the same happens in reverse.</p>
+<p>In this configuration, the number of partitions is usually fixed when the database is first set up and not changed afterward. </p>
+<h5 id="Dynamic-partitioning"><a href="#Dynamic-partitioning" class="headerlink" title="Dynamic partitioning"></a>Dynamic partitioning</h5><p>For databases that use key range partitioning, a fixed number of partitions with fixed boundaries would be very incon‐ venient: if you got the boundaries wrong, you could end up with all of the data in one partition and all of the other partitions empty.</p>
+<p>When a partition grows to exceed a configured size (on HBase, the default is 10 GB), it is split into two partitions so that approximately half of the data ends up on each side of the split. Conversely, if lots of data is deleted and a partition shrinks below some threshold, it can be merged with an adjacent par‐ tition. This process is similar to what happens at the top level of a B-tree.</p>
+<p>Each partition is assigned to one node, and each node can handle multiple partitions, like in the case of a fixed number of partitions. After a large partition has been split, one of its two halves can be transferred to another node in order to balance the load.</p>
+<p>An advantage of dynamic partitioning is that the number of partitions adapts to the total data volume. </p>
+<p>However, a caveat is that an empty database starts off with a single partition, since there is no a priori information about where to draw the partition boundaries. While the dataset is small—until it hits the point at which the first partition is split—all writes have to be processed by a single node while the other nodes sit idle. </p>
+<p>Dynamic partitioning is not only suitable for key range–partitioned data, but can equally well be used with hash-partitioned data. </p>
+<h5 id="Partitioning-proportionally-to-nodes"><a href="#Partitioning-proportionally-to-nodes" class="headerlink" title="Partitioning proportionally to nodes"></a>Partitioning proportionally to nodes</h5><p>With dynamic partitioning, the number of partitions is proportional to the size of the dataset, since the splitting and merging processes keep the size of each partition between some fixed minimum and maximum. On the other hand, with a fixed number of partitions, the size of each partition is proportional to the size of the dataset. In both of these cases, the number of partitions is independent of the number of nodes.</p>
+<p>A third option, used by Cassandra and Ketama, is to make the number of partitions proportional to the number of nodes—in other words, to have a fixed number of partitions <em>per node</em>.</p>
+<p>When a new node joins the cluster, it randomly chooses a fixed number of existing partitions to split, and then takes ownership of one half of each of those split partitions while leaving the other half of each partition in place. </p>
+<p>Picking partition boundaries randomly requires that hash-based partitioning is used. ndeed, this approach corresponds most closely to the original definition of consistent hashing. Newer hash func‐ tions can achieve a similar effect with lower metadata overhead.</p>
+<h4 id="Operations-Automatic-or-Manual-Rebalancing"><a href="#Operations-Automatic-or-Manual-Rebalancing" class="headerlink" title="Operations: Automatic or Manual Rebalancing"></a>Operations: Automatic or Manual Rebalancing</h4><h3 id="Request-Routing"><a href="#Request-Routing" class="headerlink" title="Request Routing"></a>Request Routing</h3><p>Somebody needs to stay on top of those changes in order to answer the question: if I want to read or write the key “foo”, which IP address and port number do I need to connect to?</p>
+<p>This is an instance of a more general problem called <em>service discovery</em>, which isn’t limited to just databases. </p>
+<p>On a high level, there are a few different approaches to this problem:</p>
+<ol>
+<li><p>Allow clients to contact any node (e.g., via a round-robin load balancer). If that node coincidentally owns the partition to which the request applies, it can handle the request directly; otherwise, it forwards the request to the appropriate node, receives the reply, and passes the reply along to the client.</p>
+</li>
+<li><p>Send all requests from clients to a routing tier first, which determines the node that should handle each request and forwards it accordingly. This routing tier does not itself handle any requests; it only acts as a partition-aware load balancer.</p>
+</li>
+<li><p>Require that clients be aware of the partitioning and the assignment of partitions to nodes. In this case, a client can connect directly to the appropriate node, without any intermediary.</p>
+</li>
+</ol>
+<p>In all cases, the key problem is: how does the component making the routing decision (which may be one of the nodes, or the routing tier, or the client) learn about changes in the assignment of partitions to nodes?</p>
+<p>This is a challenging problem, because it is important that all participants agree— otherwise requests would be sent to the wrong nodes and not handled correctly.</p>
+<p>Many distributed data systems rely on a separate coordination service such as ZooKeeper to keep track of this cluster metadata. Each node registers itself in ZooKeeper, and ZooKeeper maintains the authoritative mapping of partitions to nodes. Other actors, such as the routing tier or the partitioning-aware client, can subscribe to this information in ZooKeeper. Whenever a partition changes ownership, or a node is added or removed, ZooKeeper notifies the routing tier so that it can keep its routing information up to date.</p>
+<p>Cassandra and Riak take a different approach: they use a gossip protocol among the nodes to disseminate any changes in cluster state. Requests can be sent to any node, and that node forwards them to the appropriate node for the requested partition.</p>
+<h4 id="Parallel-Query-Execution"><a href="#Parallel-Query-Execution" class="headerlink" title="Parallel Query Execution"></a>Parallel Query Execution</h4><p>So far we have focused on very simple queries that read or write a single key.</p>
+<p>However, <em>massively parallel processing</em> (MPP) relational database products, often used for analytics, are much more sophisticated in the types of queries they support. The MPP query optimizer breaks this complex query into a num‐ ber of execution stages and partitions, many of which can be executed in parallel on different nodes of the database cluster. </p>
+<h3 id="Summary"><a href="#Summary" class="headerlink" title="Summary"></a>Summary</h3><p>…</p>
+
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
     <link itemprop="mainEntityOfPage" href="https://rezelchen.github.io/2020/08/08/DDIA5/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -228,7 +350,7 @@
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">Edited on</span>
-                <time title="Modified: 2020-08-12 19:36:04" itemprop="dateModified" datetime="2020-08-12T19:36:04+00:00">2020-08-12</time>
+                <time title="Modified: 2020-08-12 21:02:51" itemprop="dateModified" datetime="2020-08-12T21:02:51+00:00">2020-08-12</time>
               </span>
 
           
@@ -435,7 +557,7 @@
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">Edited on</span>
-                <time title="Modified: 2020-08-12 19:36:04" itemprop="dateModified" datetime="2020-08-12T19:36:04+00:00">2020-08-12</time>
+                <time title="Modified: 2020-08-12 21:02:51" itemprop="dateModified" datetime="2020-08-12T21:02:51+00:00">2020-08-12</time>
               </span>
 
           
@@ -548,7 +670,7 @@
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">Edited on</span>
-                <time title="Modified: 2020-08-12 19:36:04" itemprop="dateModified" datetime="2020-08-12T19:36:04+00:00">2020-08-12</time>
+                <time title="Modified: 2020-08-12 21:02:51" itemprop="dateModified" datetime="2020-08-12T21:02:51+00:00">2020-08-12</time>
               </span>
 
           
@@ -680,7 +802,7 @@
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">Edited on</span>
-                <time title="Modified: 2020-08-12 19:36:04" itemprop="dateModified" datetime="2020-08-12T19:36:04+00:00">2020-08-12</time>
+                <time title="Modified: 2020-08-12 21:02:51" itemprop="dateModified" datetime="2020-08-12T21:02:51+00:00">2020-08-12</time>
               </span>
 
           
@@ -769,7 +891,7 @@
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">Edited on</span>
-                <time title="Modified: 2020-08-12 19:36:04" itemprop="dateModified" datetime="2020-08-12T19:36:04+00:00">2020-08-12</time>
+                <time title="Modified: 2020-08-12 21:02:51" itemprop="dateModified" datetime="2020-08-12T21:02:51+00:00">2020-08-12</time>
               </span>
 
           
