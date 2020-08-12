@@ -208,17 +208,69 @@ However, even with w + r > n, there are likely to be edge cases where stale valu
 
 - If a write succeeded on some replicas but failed on others (for example because the disks on some nodes are full), and overall succeeded on fewer than w replicas, it is not rolled back on the replicas where it succeeded. This means that if a write was reported as failed, subsequent reads may or may not return the value from that write.
 
-- If a node carrying a new value fails, and its data is restored from a replica carry‐ ing an old value, the number of replicas storing the new value may fall below w, breaking the quorum condition.
+- If a node carrying a new value fails, and its data is restored from a replica carrying an old value, the number of replicas storing the new value may fall below w, breaking the quorum condition.
 
 - Even if everything is working correctly, there are edge cases in which you can get unlucky with the timing, as we shall see in “Linearizability and quorums” on page 334.
 
 
-In particular, you usually do not get the guarantees discussed in “Problems with Rep‐ lication Lag” on page 161 (reading your writes, monotonic reads, or consistent prefix reads), so the previously mentioned anomalies can occur in applications. Stronger guarantees generally require transactions or consensus. 
+In particular, you usually do not get the guarantees discussed in “Problems with Replication Lag” on page 161 (reading your writes, monotonic reads, or consistent prefix reads), so the previously mentioned anomalies can occur in applications. Stronger guarantees generally require transactions or consensus. 
 
 ##### Monitoring staleness
 
 #### Sloppy Quorums and Hinted Handoff
 
+*Sloppy quorum*: writes and reads still require w and r successful responses, but those may include nodes that are not among the designated n “home” nodes for a value. 
 
+Once the network interruption is fixed, any writes that one node temporarily accepted on behalf of another node are sent to the appropriate “home” nodes. This is called *hinted handoff*.
+
+Sloppy quorums are particularly useful for increasing write availability: as long as any w nodes are available, the database can accept writes. However, this means that even when w + r > n, you cannot be sure to read the latest value for a key, because the latest value may have been temporarily written to some nodes outside of n.
+
+Thus, a sloppy quorum actually isn’t a quorum at all in the traditional sense. It’s only an assurance of durability, namely that the data is stored on w nodes somewhere. There is no guarantee that a read of r nodes will see it until the hinted handoff has completed.
+
+##### Multi-datacenter operation
+
+#### Detecting Concurrent Writes
+
+Dynamo-style databases allow several clients to concurrently write to the same key, which means that conflicts will occur even if strict quorums are used.
+
+The problem is that events may arrive in a different order at different nodes, due to variable network delays and partial failures. 
+
+##### Last write wins (discarding concurrent writes)
+
+One approach for achieving eventual convergence is to declare that each replica need only store the most “recent” value and allow “older” values to be overwritten and dis‐ carded. Then, as long as we have some way of unambiguously determining which write is more “recent,” and every write is eventually copied to every replica, the repli‐ cas will eventually converge to the same value.
+
+Even though the writes don’t have a natural ordering, we can force an arbitrary order on them. For example, we can attach a timestamp to each write, pick the biggest timestamp as the most “recent,” and discard any writes with an earlier timestamp.
+
+##### The “happens-before” relationship and concurrency
+
+An operation A *happens before* another operation B if B knows about A, or depends on A, or builds upon A in some way. Whether one operation happens before another operation is the key to defining what concurrency means. In fact, we can simply say that two operations are concurrent if neither happens before the other (i.e., neither knows about the other)
+
+##### Capturing the happens-before relationship
+
+Note that the server can determine whether two operations are concurrent by looking at the version numbers—it does not need to interpret the value itself (so the value could be any data structure). The algorithm works as follows:
+
+- The server maintains a version number for every key, increments the version number every time that key is written, and stores the new version number along with the value written.
+
+- When a client reads a key, the server returns all values that have not been overwritten, as well as the latest version number. A client must read a key before writing.
+
+- When a client writes a key, it must include the version number from the prior read, and it must merge together all values that it received in the prior read. (The response from a write request can be like a read, returning all current values, which allows us to chain several writes like in the shopping cart example.)
+
+- When the server receives a write with a particular version number, it can over‐ write all values with that version number or below (since it knows that they have been merged into the new value), but it must keep all values with a higher ver‐ sion number (because those values are concurrent with the incoming write).
+
+When a write includes the version number from a prior read, that tells us which pre‐ vious state the write is based on. If you make a write without including a version number, it is concurrent with all other writes, so it will not overwrite anything—it will just be returned as one of the values on subsequent reads.
+
+##### Merging concurrently written values
+
+Merging sibling values is essentially the same problem as conflict resolution in multi- leader replication, which we discussed previously (see “Handling Write Conflicts” on page 171). A simple approach is to just pick one of the values based on a version number or timestamp (last write wins), but that implies losing data. So, you may need to do something more intelligent in application code.
+
+However, if you want to allow people to also remove things from their carts, and not just add things, then taking the union of siblings may not yield the right result.
+
+To prevent this problem, an item cannot simply be deleted from the database when it is removed; instead, the system must leave a marker with an appropriate version number to indicate that the item has been removed when merging siblings. Such a deletion marker is known as a *tombstone*.
+
+##### Version vectors
+
+The collection of version numbers from all the replicas is called a version vector.
+
+### Summary
 
 ...
