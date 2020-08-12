@@ -156,7 +156,7 @@
   <nav class="site-state">
       <div class="site-state-item site-state-posts">
           <a href="/blog/archives">
-          <span class="site-state-item-count">4</span>
+          <span class="site-state-item-count">5</span>
           <span class="site-state-item-name">posts</span>
         </a>
       </div>
@@ -197,6 +197,188 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
+    <link itemprop="mainEntityOfPage" href="https://rezelchen.github.io/2020/08/08/DDIA5/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/blog/images/avatar.gif">
+      <meta itemprop="name" content="Ray Chen">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Ray Chen's Blog">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/blog/2020/08/08/DDIA5/" class="post-title-link" itemprop="url">Note for DDIA in Chapter 5</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+
+              <time title="Created: 2020-08-08 20:23:00" itemprop="dateCreated datePublished" datetime="2020-08-08T20:23:00+00:00">2020-08-08</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">Edited on</span>
+                <time title="Modified: 2020-08-12 09:54:22" itemprop="dateModified" datetime="2020-08-12T09:54:22+00:00">2020-08-12</time>
+              </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <h2 id="Replication"><a href="#Replication" class="headerlink" title="Replication"></a>Replication</h2><p>There are several reasons why you might want to replicate data:</p>
+<ul>
+<li><p>To keep data geographically close to your users (and thus reduce latency)</p>
+</li>
+<li><p>To allow the system to continue working even if some of its parts have failed (and thus increase availability)</p>
+</li>
+<li><p>To scale out the number of machines that can serve read queries (and thus increase read throughput)</p>
+<p>We will discuss three popular algorithms for replicating changes between nodes: <em>single-leader</em>, <em>multi-leader</em>, and <em>leaderless</em> replication. Almost all distributed databases use one of these three approaches. </p>
+</li>
+</ul>
+<h3 id="Leaders-and-Followers"><a href="#Leaders-and-Followers" class="headerlink" title="Leaders and Followers"></a>Leaders and Followers</h3><h4 id="Synchronous-Versus-Asynchronous-Replication"><a href="#Synchronous-Versus-Asynchronous-Replication" class="headerlink" title="Synchronous Versus Asynchronous Replication"></a>Synchronous Versus Asynchronous Replication</h4><p>In practice, if you enable synchronous replication on a database, it usually means that <em>one</em> of the followers is synchronous, and the others are asynchronous.</p>
+<h4 id="Setting-Up-New-Followers"><a href="#Setting-Up-New-Followers" class="headerlink" title="Setting Up New Followers"></a>Setting Up New Followers</h4><h4 id="Handling-Node-Outages"><a href="#Handling-Node-Outages" class="headerlink" title="Handling Node Outages"></a>Handling Node Outages</h4><h5 id="Follower-failure-Catch-up-recovery"><a href="#Follower-failure-Catch-up-recovery" class="headerlink" title="Follower failure: Catch-up recovery"></a>Follower failure: Catch-up recovery</h5><h5 id="Leader-failure-Failover"><a href="#Leader-failure-Failover" class="headerlink" title="Leader failure: Failover"></a>Leader failure: Failover</h5><p>An automatic failover process usually consists of the following steps:</p>
+<ul>
+<li><p><em>Determining that the leader has failed.</em></p>
+</li>
+<li><p><em>Choosing a new leader.</em> The best candidate for leadership is usually the replica with the most up-to-date data changes from the old leader (to minimize any data loss).</p>
+</li>
+<li><p><em>Reconfiguring the system to use the new leader.</em></p>
+</li>
+</ul>
+<p>Failover is fraught with things that can go wrong:</p>
+<ul>
+<li><p>If asynchronous replication is used, the new leader may not have received all the writes from the old leader before it failed. If the former leader rejoins the cluster after a new leader has been chosen, what should happen to those writes? The new leader may have received conflicting writes in the meantime. The most common solution is for the old leader’s unreplicated writes to simply be discarded, which may violate clients’ durability expectations.</p>
+</li>
+<li><p>Discarding writes is especially dangerous if other storage systems outside of the database need to be coordinated with the database contents. </p>
+</li>
+<li><p>In certain fault scenarios (see Chapter 8), it could happen that two nodes both believe that they are the leader. This situation is called split brain, and it is dan‐ gerous: if both leaders accept writes, and there is no process for resolving con‐ flicts (see “Multi-Leader Replication” on page 168), data is likely to be lost or corrupted. </p>
+</li>
+<li><p>What is the right timeout before the leader is declared dead? </p>
+</li>
+</ul>
+<h4 id="Implementation-of-Replication-Logs"><a href="#Implementation-of-Replication-Logs" class="headerlink" title="Implementation of Replication Logs"></a>Implementation of Replication Logs</h4><h5 id="Statement-based-replication"><a href="#Statement-based-replication" class="headerlink" title="Statement-based replication"></a>Statement-based replication</h5><p>In the simplest case, the leader logs every write request (statement) that it executes and sends that statement log to its followers. </p>
+<p>Although this may sound reasonable, there are various ways in which this approach to replication can break down:</p>
+<ul>
+<li><p>Any statement that calls a nondeterministic function, such as NOW() to get the current date and time or RAND() to get a random number, is likely to generate a different value on each replica.</p>
+</li>
+<li><p>If statements use an autoincrementing column, or if they depend on the existing data in the database (e.g., UPDATE … WHERE <some condition>), they must be executed in exactly the same order on each replica, or else they may have a differ‐ ent effect. This can be limiting when there are multiple concurrently executing transactions.</p>
+</li>
+<li><p>Statements that have side effects (e.g., triggers, stored procedures, user-defined functions) may result in different side effects occurring on each replica, unless the side effects are absolutely deterministic.</p>
+</li>
+</ul>
+<h5 id="Write-ahead-log-WAL-shipping"><a href="#Write-ahead-log-WAL-shipping" class="headerlink" title="Write-ahead log (WAL) shipping"></a>Write-ahead log (WAL) shipping</h5><p>The main disadvantage is that the log describes the data on a very low level: a WAL con‐ tains details of which bytes were changed in which disk blocks. This makes replica‐ tion closely coupled to the storage engine. </p>
+<p>That may seem like a minor implementation detail, but it can have a big operational impact. If the replication protocol allows the follower to use a newer software version than the leader, you can perform a zero-downtime upgrade of the database software by first upgrading the followers and then performing a failover to make one of the upgraded nodes the new leader. If the replication protocol does not allow this version mismatch, as is often the case with WAL shipping, such upgrades require downtime.</p>
+<h5 id="Logical-row-based-log-replication"><a href="#Logical-row-based-log-replication" class="headerlink" title="Logical (row-based) log replication"></a>Logical (row-based) log replication</h5><p>An alternative is to use different log formats for replication and for the storage engine, which allows the replication log to be decoupled from the storage engine internals. This kind of replication log is called a logical log, to distinguish it from the storage engine’s (physical) data representation.</p>
+<p>A logical log for a relational database is usually a sequence of records describing writes to database tables at the granularity of a row:</p>
+<ul>
+<li><p>For an inserted row, the log contains the new values of all columns.</p>
+</li>
+<li><p>For a deleted row, the log contains enough information to uniquely identify the row that was deleted. Typically this would be the primary key, but if there is no primary key on the table, the old values of all columns need to be logged.</p>
+</li>
+<li><p>For an updated row, the log contains enough information to uniquely identify the updated row, and the new values of all columns (or at least the new values of all columns that changed).</p>
+</li>
+</ul>
+<p>A transaction that modifies several rows generates several such log records, followed by a record indicating that the transaction was committed.</p>
+<h5 id="Trigger-based-replication"><a href="#Trigger-based-replication" class="headerlink" title="Trigger-based replication"></a>Trigger-based replication</h5><h3 id="Problems-with-Replication-Lag"><a href="#Problems-with-Replication-Lag" class="headerlink" title="Problems with Replication Lag"></a>Problems with Replication Lag</h3><h4 id="Reading-Your-Own-Writes"><a href="#Reading-Your-Own-Writes" class="headerlink" title="Reading Your Own Writes"></a>Reading Your Own Writes</h4><p><em>read-after-write consistency</em><br><em>cross-device read-after-write consistency</em></p>
+<h4 id="Monotonic-Reads"><a href="#Monotonic-Reads" class="headerlink" title="Monotonic Reads"></a>Monotonic Reads</h4><p>When you read data, you may see an old value; monotonic reads only means that if one user makes several reads in sequence, they will not see time go backward— i.e., they will not read older data after having previously read newer data.</p>
+<p>One way of achieving monotonic reads is to make sure that each user always makes their reads from the same replica.</p>
+<h4 id="Consistent-Prefix-Reads"><a href="#Consistent-Prefix-Reads" class="headerlink" title="Consistent Prefix Reads"></a>Consistent Prefix Reads</h4><p>This guarantee says that if a sequence of writes happens in a certain order, then anyone reading those writes will see them appear in the same order.</p>
+<h4 id="Solutions-for-Replication-Lag"><a href="#Solutions-for-Replication-Lag" class="headerlink" title="Solutions for Replication Lag"></a>Solutions for Replication Lag</h4><h3 id="Multi-Leader-Replication"><a href="#Multi-Leader-Replication" class="headerlink" title="Multi-Leader Replication"></a>Multi-Leader Replication</h3><h4 id="Use-Cases-for-Multi-Leader-Replication"><a href="#Use-Cases-for-Multi-Leader-Replication" class="headerlink" title="Use Cases for Multi-Leader Replication"></a>Use Cases for Multi-Leader Replication</h4><h5 id="Multi-datacenter-operation"><a href="#Multi-datacenter-operation" class="headerlink" title="Multi-datacenter operation"></a>Multi-datacenter operation</h5><p>Although multi-leader replication has advantages, it also has a big downside: the same data may be concurrently modified in two different datacenters, and those write conflicts must be resolved.</p>
+<h5 id="Clients-with-offline-operation"><a href="#Clients-with-offline-operation" class="headerlink" title="Clients with offline operation"></a>Clients with offline operation</h5><p>Another situation in which multi-leader replication is appropriate is if you have an application that needs to continue to work while it is disconnected from the internet.</p>
+<p>In this case, every device has a local database that acts as a leader (it accepts write requests), and there is an asynchronous multi-leader replication process (sync) between the replicas of your calendar on all of your devices. The replication lag may be hours or even days, depending on when you have internet access available.</p>
+<p>There are tools that aim to make this kind of multi-leader configuration easier. For example, CouchDB is designed for this mode of operation.</p>
+<h5 id="Collaborative-editing"><a href="#Collaborative-editing" class="headerlink" title="Collaborative editing"></a>Collaborative editing</h5><p><em>Real-time collaborative editing</em> applications allow several people to edit a document simultaneously. </p>
+<p>We don’t usually think of collaborative editing as a database replication problem, but it has a lot in common with the previously mentioned offline editing use case. </p>
+<h4 id="Handling-Write-Conflicts"><a href="#Handling-Write-Conflicts" class="headerlink" title="Handling Write Conflicts"></a>Handling Write Conflicts</h4><h5 id="Synchronous-versus-asynchronous-conflict-detection"><a href="#Synchronous-versus-asynchronous-conflict-detection" class="headerlink" title="Synchronous versus asynchronous conflict detection"></a>Synchronous versus asynchronous conflict detection</h5><p>In a single-leader database, the second writer will either block and wait for the first write to complete, or abort the second write transaction, forcing the user to retry the write. On the other hand, in a multi-leader setup, both writes are successful, and the conflict is only detected asynchronously at some later point in time. At that time, it may be too late to ask the user to resolve the conflict.</p>
+<h5 id="Conflict-avoidance"><a href="#Conflict-avoidance" class="headerlink" title="Conflict avoidance"></a>Conflict avoidance</h5><p>The simplest strategy for dealing with conflicts is to avoid them: if the application can ensure that all writes for a particular record go through the same leader, then con‐ flicts cannot occur. </p>
+<h5 id="Converging-toward-a-consistent-state"><a href="#Converging-toward-a-consistent-state" class="headerlink" title="Converging toward a consistent state"></a>Converging toward a consistent state</h5><p>That is not acceptable—every replication scheme must ensure that the data is eventually the same in all replicas. Thus, the database must resolve the conflict in a <em>convergent</em> way, which means that all replicas must arrive at the same final value when all changes have been replicated.</p>
+<p>There are various ways of achieving convergent conflict resolution:</p>
+<ul>
+<li><p>Give each write a unique ID (e.g., a timestamp, a long random number, a UUID, or a hash of the key and value), pick the write with the highest ID as the <em>winner</em>, and throw away the other writes. If a timestamp is used, this technique is known as <em>last write wins</em> (LWW). Although this approach is popular, it is dangerously prone to data loss.</p>
+</li>
+<li><p>Give each replica a unique ID, and let writes that originated at a higher- numbered replica always take precedence over writes that originated at a lower- numbered replica. This approach also implies data loss.</p>
+</li>
+<li><p>Somehow merge the values together—e.g., order them alphabetically and then concatenate them.</p>
+</li>
+<li><p>Record the conflict in an explicit data structure that preserves all information, and write application code that resolves the conflict at some later time.</p>
+</li>
+</ul>
+<h5 id="Custom-conflict-resolution-logic"><a href="#Custom-conflict-resolution-logic" class="headerlink" title="Custom conflict resolution logic"></a>Custom conflict resolution logic</h5><p>That code may be executed on write or on read:</p>
+<p>On write: As soon as the database system detects a conflict in the log of replicated changes, it calls the conflict handler.</p>
+<p>On read: When a conflict is detected, all the conflicting writes are stored. The next time the data is read, these multiple versions of the data are returned to the application. The application may prompt the user or automatically resolve the conflict, and write the result back to the database. </p>
+<p>There has been some interesting research into automatically resolving conflicts caused by concurrent data modifications. A few lines of research are worth mentioning:</p>
+<ul>
+<li><p><em>Conflict-free replicated datatypes</em> (CRDTs) are a family of data structures for sets, maps, ordered lists, counters, etc. that can be concurrently edited by multiple users, and which automatically resolve conflicts in sensible ways. Some CRDTs have been implemented in Riak 2.0.</p>
+</li>
+<li><p><em>Mergeable persistent data structures</em> track history explicitly, similarly to the Git version control system, and use a three-way merge function (whereas CRDTs use two-way merges).</p>
+</li>
+<li><p><em>Operational transformation</em> is the conflict resolution algorithm behind col‐ laborative editing applications such as Etherpad and Google Docs. It was designed particularly for concurrent editing of an ordered list of items, such as the list of characters that constitute a text document.</p>
+</li>
+</ul>
+<h5 id="What-is-a-conflict"><a href="#What-is-a-conflict" class="headerlink" title="What is a conflict?"></a>What is a conflict?</h5><h4 id="Multi-Leader-Replication-Topologies"><a href="#Multi-Leader-Replication-Topologies" class="headerlink" title="Multi-Leader Replication Topologies"></a>Multi-Leader Replication Topologies</h4><p>A problem with <em>circular and star topologies</em> is that if just one node fails, it can inter‐ rupt the flow of replication messages between other nodes, causing them to be unable to communicate until the node is fixed.</p>
+<p>On the other hand, <em>all-to-all topologies</em> can have issues too. In particular, some network links may be faster than others (e.g., due to network congestion), with the result that some replication messages may “overtake” others.</p>
+<h3 id="Leaderless-Replication"><a href="#Leaderless-Replication" class="headerlink" title="Leaderless Replication"></a>Leaderless Replication</h3><p>It once again became a fashiona‐ ble architecture for databases after Amazon used it for its in-house Dynamo system. Riak, Cassandra, and Voldemort are open source datastores with leaderless replication models inspired by Dynamo, so this kind of database is also known as Dynamo-style.</p>
+<h4 id="Writing-to-the-Database-When-a-Node-Is-Down"><a href="#Writing-to-the-Database-When-a-Node-Is-Down" class="headerlink" title="Writing to the Database When a Node Is Down"></a>Writing to the Database When a Node Is Down</h4><h5 id="Read-repair-and-anti-entropy"><a href="#Read-repair-and-anti-entropy" class="headerlink" title="Read repair and anti-entropy"></a>Read repair and anti-entropy</h5><p>Two mechanisms are often used in Dynamo-style datastores:</p>
+<ul>
+<li>Read repair</li>
+<li>Anti-entropy process</li>
+</ul>
+<p>Not all systems implement both of these; for example, Voldemort currently does not have an anti-entropy process. Note that without an anti-entropy process, values that are rarely read may be missing from some replicas and thus have reduced durability, because read repair is only performed when a value is read by the application.</p>
+<h5 id="Quorums-for-reading-and-writing"><a href="#Quorums-for-reading-and-writing" class="headerlink" title="Quorums for reading and writing"></a>Quorums for reading and writing</h5><p>More generally, if there are n replicas, every write must be confirmed by w nodes to be considered successful, and we must query at least r nodes for each read. (In our example, n = 3, w = 2, r = 2.)</p>
+<p>You can think of r and w as the minimum number of votes required for the read or write to be valid.</p>
+<h4 id="Limitations-of-Quorum-Consistency"><a href="#Limitations-of-Quorum-Consistency" class="headerlink" title="Limitations of Quorum Consistency"></a>Limitations of Quorum Consistency</h4><p>However, even with w + r &gt; n, there are likely to be edge cases where stale values are returned. These depend on the implementation, but possible scenarios include:</p>
+<ul>
+<li><p>If a sloppy quorum is used, the w writes may end up on different nodes than the r reads, so there is no longer a guaranteed overlap between the r nodes and the w nodes.</p>
+</li>
+<li><p>If two writes occur concurrently, it is not clear which one happened first. In this case, the only safe solution is to merge the concurrent writes.</p>
+</li>
+<li><p>If a write happens concurrently with a read, the write may be reflected on only some of the replicas. In this case, it’s undetermined whether the read returns the old or the new value.</p>
+</li>
+<li><p>If a write succeeded on some replicas but failed on others (for example because the disks on some nodes are full), and overall succeeded on fewer than w replicas, it is not rolled back on the replicas where it succeeded. This means that if a write was reported as failed, subsequent reads may or may not return the value from that write.</p>
+</li>
+<li><p>If a node carrying a new value fails, and its data is restored from a replica carry‐ ing an old value, the number of replicas storing the new value may fall below w, breaking the quorum condition.</p>
+</li>
+<li><p>Even if everything is working correctly, there are edge cases in which you can get unlucky with the timing, as we shall see in “Linearizability and quorums” on page 334.</p>
+</li>
+</ul>
+<p>In particular, you usually do not get the guarantees discussed in “Problems with Rep‐ lication Lag” on page 161 (reading your writes, monotonic reads, or consistent prefix reads), so the previously mentioned anomalies can occur in applications. Stronger guarantees generally require transactions or consensus. </p>
+<h5 id="Monitoring-staleness"><a href="#Monitoring-staleness" class="headerlink" title="Monitoring staleness"></a>Monitoring staleness</h5><h4 id="Sloppy-Quorums-and-Hinted-Handoff"><a href="#Sloppy-Quorums-and-Hinted-Handoff" class="headerlink" title="Sloppy Quorums and Hinted Handoff"></a>Sloppy Quorums and Hinted Handoff</h4><p>…</p>
+
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
     <link itemprop="mainEntityOfPage" href="https://rezelchen.github.io/2020/07/28/DDIA4/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -228,7 +410,7 @@
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">Edited on</span>
-                <time title="Modified: 2020-08-08 12:23:42" itemprop="dateModified" datetime="2020-08-08T12:23:42+00:00">2020-08-08</time>
+                <time title="Modified: 2020-08-12 09:54:22" itemprop="dateModified" datetime="2020-08-12T09:54:22+00:00">2020-08-12</time>
               </span>
 
           
@@ -341,7 +523,7 @@
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">Edited on</span>
-                <time title="Modified: 2020-08-08 12:23:42" itemprop="dateModified" datetime="2020-08-08T12:23:42+00:00">2020-08-08</time>
+                <time title="Modified: 2020-08-12 09:54:22" itemprop="dateModified" datetime="2020-08-12T09:54:22+00:00">2020-08-12</time>
               </span>
 
           
@@ -473,7 +655,7 @@
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">Edited on</span>
-                <time title="Modified: 2020-08-08 12:23:42" itemprop="dateModified" datetime="2020-08-08T12:23:42+00:00">2020-08-08</time>
+                <time title="Modified: 2020-08-12 09:54:22" itemprop="dateModified" datetime="2020-08-12T09:54:22+00:00">2020-08-12</time>
               </span>
 
           
@@ -562,7 +744,7 @@
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">Edited on</span>
-                <time title="Modified: 2020-08-08 12:23:42" itemprop="dateModified" datetime="2020-08-08T12:23:42+00:00">2020-08-08</time>
+                <time title="Modified: 2020-08-12 09:54:22" itemprop="dateModified" datetime="2020-08-12T09:54:22+00:00">2020-08-12</time>
               </span>
 
           
