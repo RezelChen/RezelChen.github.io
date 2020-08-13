@@ -1,6 +1,6 @@
 ---
 title: Note for DDIA in Chapter 6
-date: 2020-08-13 21:43:00
+date: 2020-08-12 21:43:00
 tags: note
 ---
 
