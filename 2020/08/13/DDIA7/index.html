@@ -1,0 +1,583 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 4.2.1">
+  <link rel="apple-touch-icon" sizes="180x180" href="/blog/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/blog/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/blog/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/blog/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/blog/css/main.css">
+
+
+<link rel="stylesheet" href="/blog/lib/font-awesome/css/all.min.css">
+  
+  <link rel="stylesheet" href="/blog/lib/animate-css/animate.min.css">
+
+<script class="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"rezelchen.github.io","root":"/blog/","scheme":"Muse","version":"8.0.0-rc.4","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12},"copycode":false,"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}}};
+  </script>
+
+  <meta name="description" content="TransactionsA transaction is a way for an application to group several reads and writes together into a logical unit. Conceptually, all the reads and writes in a transaction are executed as one operat">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Note for DDIA in Chapter 7">
+<meta property="og:url" content="https://rezelchen.github.io/2020/08/13/DDIA7/index.html">
+<meta property="og:site_name" content="Ray Chen&#39;s Blog">
+<meta property="og:description" content="TransactionsA transaction is a way for an application to group several reads and writes together into a logical unit. Conceptually, all the reads and writes in a transaction are executed as one operat">
+<meta property="og:locale" content="en_US">
+<meta property="article:published_time" content="2020-08-13T08:37:00.000Z">
+<meta property="article:modified_time" content="2020-08-13T11:53:41.209Z">
+<meta property="article:author" content="Ray Chen">
+<meta property="article:tag" content="note">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="https://rezelchen.github.io/2020/08/13/DDIA7/">
+
+
+<script class="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'en'
+  };
+</script>
+
+  <title>Note for DDIA in Chapter 7 | Ray Chen's Blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  body { margin-top: 2rem; }
+
+  .use-motion .menu-item,
+  .use-motion .sidebar,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header {
+    visibility: visible;
+  }
+
+  .use-motion .header,
+  .use-motion .site-brand-container .toggle,
+  .use-motion .footer { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle,
+  .use-motion .custom-logo-image {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line {
+    transform: scaleX(1);
+  }
+
+  .search-pop-overlay, .sidebar-nav { display: none; }
+  .sidebar-panel { display: block; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <main class="main">
+      <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+        <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/blog/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <h1 class="site-title">Ray Chen's Blog</h1>
+      <i class="logo-line"></i>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+
+
+
+</div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <section class="post-toc-wrap sidebar-panel">
+          <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#Transactions"><span class="nav-number">1.</span> <span class="nav-text">Transactions</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#The-Slippery-Concept-of-a-Transaction"><span class="nav-number">1.1.</span> <span class="nav-text">The Slippery Concept of a Transaction</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#The-Meaning-of-ACID"><span class="nav-number">1.1.1.</span> <span class="nav-text">The Meaning of ACID</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#Atomicity"><span class="nav-number">1.1.1.1.</span> <span class="nav-text">Atomicity</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#Consistency"><span class="nav-number">1.1.1.2.</span> <span class="nav-text">Consistency</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#Isolation"><span class="nav-number">1.1.1.3.</span> <span class="nav-text">Isolation</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#Durability"><span class="nav-number">1.1.1.4.</span> <span class="nav-text">Durability</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Single-Object-and-Multi-Object-Operations"><span class="nav-number">1.1.2.</span> <span class="nav-text">Single-Object and Multi-Object Operations</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#Single-object-writes"><span class="nav-number">1.1.2.1.</span> <span class="nav-text">Single-object writes</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#The-need-for-multi-object-transactions"><span class="nav-number">1.1.2.2.</span> <span class="nav-text">The need for multi-object transactions</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#Handling-errors-and-aborts"><span class="nav-number">1.1.2.3.</span> <span class="nav-text">Handling errors and aborts</span></a></li></ol></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Weak-Isolation-Levels"><span class="nav-number">1.2.</span> <span class="nav-text">Weak Isolation Levels</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#Read-Committed"><span class="nav-number">1.2.1.</span> <span class="nav-text">Read Committed</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#No-dirty-reads"><span class="nav-number">1.2.1.1.</span> <span class="nav-text">No dirty reads</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#No-dirty-writes"><span class="nav-number">1.2.1.2.</span> <span class="nav-text">No dirty writes</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#Implementing-read-committed"><span class="nav-number">1.2.1.3.</span> <span class="nav-text">Implementing read committed</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Snapshot-Isolation-and-Repeatable-Read"><span class="nav-number">1.2.2.</span> <span class="nav-text">Snapshot Isolation and Repeatable Read</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#Implementing-snapshot-isolation"><span class="nav-number">1.2.2.1.</span> <span class="nav-text">Implementing snapshot isolation</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#Visibility-rules-for-observing-a-consistent-snapshot"><span class="nav-number">1.2.2.2.</span> <span class="nav-text">Visibility rules for observing a consistent snapshot</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#Indexes-and-snapshot-isolation"><span class="nav-number">1.2.2.3.</span> <span class="nav-text">Indexes and snapshot isolation</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#Repeatable-read-and-naming-confusion"><span class="nav-number">1.2.2.4.</span> <span class="nav-text">Repeatable read and naming confusion</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Preventing-Lost-Updates"><span class="nav-number">1.2.3.</span> <span class="nav-text">Preventing Lost Updates</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#Atomic-write-operations"><span class="nav-number">1.2.3.1.</span> <span class="nav-text">Atomic write operations</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#Explicit-locking"><span class="nav-number">1.2.3.2.</span> <span class="nav-text">Explicit locking</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#Automatically-detecting-lost-updates"><span class="nav-number">1.2.3.3.</span> <span class="nav-text">Automatically detecting lost updates</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#Compare-and-set"><span class="nav-number">1.2.3.4.</span> <span class="nav-text">Compare-and-set</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#Conflict-resolution-and-replication"><span class="nav-number">1.2.3.5.</span> <span class="nav-text">Conflict resolution and replication</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Write-Skew-and-Phantoms"><span class="nav-number">1.2.4.</span> <span class="nav-text">Write Skew and Phantoms</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#Characterizing-write-skew"><span class="nav-number">1.2.4.1.</span> <span class="nav-text">Characterizing write skew</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#More-examples-of-write-skew"><span class="nav-number">1.2.4.2.</span> <span class="nav-text">More examples of write skew</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#Phantoms-causing-write-skew"><span class="nav-number">1.2.4.3.</span> <span class="nav-text">Phantoms causing write skew</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#Materializing-conflicts"><span class="nav-number">1.2.4.4.</span> <span class="nav-text">Materializing conflicts</span></a></li></ol></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Serializability"><span class="nav-number">1.3.</span> <span class="nav-text">Serializability</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#Actual-Serial-Execution"><span class="nav-number">1.3.1.</span> <span class="nav-text">Actual Serial Execution</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#Encapsulating-transactions-in-stored-procedures"><span class="nav-number">1.3.1.1.</span> <span class="nav-text">Encapsulating transactions in stored procedures</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#Pros-and-cons-of-stored-procedures"><span class="nav-number">1.3.1.2.</span> <span class="nav-text">Pros and cons of stored procedures</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#Partitioning"><span class="nav-number">1.3.1.3.</span> <span class="nav-text">Partitioning</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#Summary-of-serial-execution"><span class="nav-number">1.3.1.4.</span> <span class="nav-text">Summary of serial execution</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Two-Phase-Locking-2PL"><span class="nav-number">1.3.2.</span> <span class="nav-text">Two-Phase Locking (2PL)</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#Implementation-of-two-phase-locking"><span class="nav-number">1.3.2.1.</span> <span class="nav-text">Implementation of two-phase locking</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#Performance-of-two-phase-locking"><span class="nav-number">1.3.2.2.</span> <span class="nav-text">Performance of two-phase locking</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#Predicate-locks"><span class="nav-number">1.3.2.3.</span> <span class="nav-text">Predicate locks</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#Index-range-locks"><span class="nav-number">1.3.2.4.</span> <span class="nav-text">Index-range locks</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Serializable-Snapshot-Isolation-SSI"><span class="nav-number">1.3.3.</span> <span class="nav-text">Serializable Snapshot Isolation (SSI)</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#Pessimistic-versus-optimistic-concurrency-control"><span class="nav-number">1.3.3.1.</span> <span class="nav-text">Pessimistic versus optimistic concurrency control</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#Decisions-based-on-an-outdated-premise"><span class="nav-number">1.3.3.2.</span> <span class="nav-text">Decisions based on an outdated premise</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#Detecting-stale-MVCC-reads"><span class="nav-number">1.3.3.3.</span> <span class="nav-text">Detecting stale MVCC reads</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#Detecting-writes-that-affect-prior-reads"><span class="nav-number">1.3.3.4.</span> <span class="nav-text">Detecting writes that affect prior reads</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#Performance-of-serializable-snapshot-isolation"><span class="nav-number">1.3.3.5.</span> <span class="nav-text">Performance of serializable snapshot isolation</span></a></li></ol></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Summary"><span class="nav-number">1.4.</span> <span class="nav-text">Summary</span></a></li></ol></li></ol></div>
+      </section>
+      <!--/noindex-->
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-author animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">Ray Chen</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/blog/archives">
+          <span class="site-state-item-count">7</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-tags">
+        <span class="site-state-item-count">1</span>
+        <span class="site-state-item-name">tags</span>
+      </div>
+  </nav>
+</div>
+
+
+
+      </section>
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </header>
+
+      
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div id="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+
+      <div class="main-inner">
+        
+
+        <div class="content post posts-expand">
+          
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
+    <link itemprop="mainEntityOfPage" href="https://rezelchen.github.io/2020/08/13/DDIA7/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/blog/images/avatar.gif">
+      <meta itemprop="name" content="Ray Chen">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Ray Chen's Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Note for DDIA in Chapter 7
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+              
+
+              <time title="Created: 2020-08-13 08:37:00 / Modified: 11:53:41" itemprop="dateCreated datePublished" datetime="2020-08-13T08:37:00+00:00">2020-08-13</time>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h2 id="Transactions"><a href="#Transactions" class="headerlink" title="Transactions"></a>Transactions</h2><p>A transaction is a way for an application to group several reads and writes together into a logical unit. Conceptually, all the reads and writes in a transaction are executed as one operation: either the entire transaction succeeds (<em>commit</em>) or it fails (<em>abort, rollback</em>). </p>
+<p>In this chapter, we will examine many examples of things that can go wrong, and explore the algorithms that databases use to guard against those issues. We will go especially deep in the area of concurrency control, discussing various kinds of race conditions that can occur and how databases implement isolation levels such as <em>read committed</em>, <em>snapshot isolation</em>, and <em>serializability</em>.</p>
+<h3 id="The-Slippery-Concept-of-a-Transaction"><a href="#The-Slippery-Concept-of-a-Transaction" class="headerlink" title="The Slippery Concept of a Transaction"></a>The Slippery Concept of a Transaction</h3><h4 id="The-Meaning-of-ACID"><a href="#The-Meaning-of-ACID" class="headerlink" title="The Meaning of ACID"></a>The Meaning of ACID</h4><h5 id="Atomicity"><a href="#Atomicity" class="headerlink" title="Atomicity"></a>Atomicity</h5><p>If the writes are grouped together into an atomic transaction, and the transaction cannot be completed (committed) due to a fault, then the transaction is aborted and the database must discard or undo any writes it has made so far in that transaction.</p>
+<h5 id="Consistency"><a href="#Consistency" class="headerlink" title="Consistency"></a>Consistency</h5><p>The idea of ACID consistency is that you have certain statements about your data (invariants) that must always be true.</p>
+<p>However, this idea of consistency depends on the application’s notion of invariants, and it’s the application’s responsibility to define its transactions correctly so that they preserve consistency. </p>
+<p>The application may rely on the database’s atomicity and isolation properties in order to achieve consistency, but it’s not up to the database alone. </p>
+<h5 id="Isolation"><a href="#Isolation" class="headerlink" title="Isolation"></a>Isolation</h5><p><em>Isolation</em> in the sense of ACID means that concurrently executing transactions are isolated from each other: they cannot step on each other’s toes. The classic database textbooks formalize isolation as <em>serializability</em>, which means that each transaction can pretend that it is the only transaction running on the entire database.</p>
+<p>However, in practice, serializable isolation is rarely used, because it carries a performance penalty. </p>
+<h5 id="Durability"><a href="#Durability" class="headerlink" title="Durability"></a>Durability</h5><p><em>Durability</em> is the promise that once a transaction has com‐ mitted successfully, any data it has written will not be forgotten, even if there is a hardware fault or the database crashes.</p>
+<p>In a replicated database, durabil‐ ity may mean that the data has been successfully copied to some number of nodes. In order to provide a durability guarantee, a database must wait until these writes or replications are complete before reporting a transaction as successfully committed.</p>
+<h4 id="Single-Object-and-Multi-Object-Operations"><a href="#Single-Object-and-Multi-Object-Operations" class="headerlink" title="Single-Object and Multi-Object Operations"></a>Single-Object and Multi-Object Operations</h4><h5 id="Single-object-writes"><a href="#Single-object-writes" class="headerlink" title="Single-object writes"></a>Single-object writes</h5><p>Storage engines almost universally aim to provide atomicity and isolation on the level of a single object (such as a key- value pair) on one node. Atomicity can be implemented using a log for crash recovery, and isolation can be implemented using a lock on each object (allowing only one thread to access an object at any one time).</p>
+<p>Some databases also provide more complex atomic operations,iv such as an increment operation and compare-and-set operation.</p>
+<h5 id="The-need-for-multi-object-transactions"><a href="#The-need-for-multi-object-transactions" class="headerlink" title="The need for multi-object transactions"></a>The need for multi-object transactions</h5><h5 id="Handling-errors-and-aborts"><a href="#Handling-errors-and-aborts" class="headerlink" title="Handling errors and aborts"></a>Handling errors and aborts</h5><p>A key feature of a transaction is that it can be aborted and safely retried if an error occurred. </p>
+<p>Although retrying an aborted transaction is a simple and effective error handling mechanism, it isn’t perfect:</p>
+<ul>
+<li><p>If the transaction actually succeeded, but the network failed while the server tried to acknowledge the successful commit to the client (so the client thinks it failed), then retrying the transaction causes it to be performed twice—unless you have an additional application-level deduplication mechanism in place.</p>
+</li>
+<li><p>If the error is due to overload, retrying the transaction will make the problem worse, not better. To avoid such feedback cycles, you can limit the number of retries, use exponential backoff, and handle overload-related errors differently from other errors (if possible).</p>
+</li>
+<li><p>It is only worth retrying after transient errors (for example due to deadlock, iso‐ lation violation, temporary network interruptions, and failover); after a perma‐ nent error (e.g., constraint violation) a retry would be pointless.</p>
+</li>
+<li><p>If the transaction also has side effects outside of the database, those side effects may happen even if the transaction is aborted. For example, if you’re sending an email, you wouldn’t want to send the email again every time you retry the trans‐ action. If you want to make sure that several different systems either commit or abort together, two-phase commit can help.</p>
+</li>
+<li><p>If the client process fails while retrying, any data it was trying to write to the database is lost.</p>
+</li>
+</ul>
+<h3 id="Weak-Isolation-Levels"><a href="#Weak-Isolation-Levels" class="headerlink" title="Weak Isolation Levels"></a>Weak Isolation Levels</h3><h4 id="Read-Committed"><a href="#Read-Committed" class="headerlink" title="Read Committed"></a>Read Committed</h4><p>The most basic level of transaction isolation is read committed.v It makes two guarantees:</p>
+<ol>
+<li><p>When reading from the database, you will only see data that has been committed (no dirty reads).</p>
+</li>
+<li><p>When writing to the database, you will only overwrite data that has been committed (no dirty writes).</p>
+</li>
+</ol>
+<h5 id="No-dirty-reads"><a href="#No-dirty-reads" class="headerlink" title="No dirty reads"></a>No dirty reads</h5><p>There are a few reasons why it’s useful to prevent dirty reads:</p>
+<ul>
+<li><p>If a transaction needs to update several objects, a dirty read means that another transaction may see some of the updates but not others.</p>
+</li>
+<li><p>If a transaction aborts, any writes it has made need to be rolled back. If the database allows dirty reads, that means a transaction may see data that is later rolled back.</p>
+</li>
+</ul>
+<h5 id="No-dirty-writes"><a href="#No-dirty-writes" class="headerlink" title="No dirty writes"></a>No dirty writes</h5><p>Transactions running at the read committed isolation level must prevent dirty writes, usually by delaying the second write until the first write’s transaction has committed or aborted.</p>
+<p>By preventing dirty writes, this isolation level avoids some kinds of concurrency problems:</p>
+<ul>
+<li><p>If transactions update multiple objects, dirty writes can lead to a bad outcome.</p>
+</li>
+<li><p>However, read committed does not prevent the race condition between two counter increments in Figure 7-1.</p>
+</li>
+</ul>
+<h5 id="Implementing-read-committed"><a href="#Implementing-read-committed" class="headerlink" title="Implementing read committed"></a>Implementing read committed</h5><p>Most commonly, databases prevent dirty writes by using row-level locks: when a transaction wants to modify a particular object (row or document), it must first acquire a lock on that object. It must then hold that lock until the transaction is committed or aborted.</p>
+<p>How do we prevent dirty reads? One option would be to use the same lock, and to require any transaction that wants to read an object to briefly acquire the lock and then release it again immediately after reading.</p>
+<p>However, the approach of requiring read locks does not work well in practice, because one long-running write transaction can force many read-only transactions to wait until the long-running transaction has completed.</p>
+<p>The database remembers both the old committed value and the new value set by the transaction that currently holds the write lock. While the transaction is ongoing, any other transactions that read the object are simply given the old value. Only when the new value is committed do transactions switch over to reading the new value.</p>
+<h4 id="Snapshot-Isolation-and-Repeatable-Read"><a href="#Snapshot-Isolation-and-Repeatable-Read" class="headerlink" title="Snapshot Isolation and Repeatable Read"></a>Snapshot Isolation and Repeatable Read</h4><p><em>nonrepeatable read</em> or <em>read skew</em></p>
+<p>Some situations cannot tolerate such temporary inconsistency:</p>
+<ul>
+<li>Backups</li>
+<li>Analytic queries and integrity checks</li>
+</ul>
+<p><em>Snapshot isolation</em> is the most common solution to this problem. The idea is that each transaction reads from a consistent snapshot of the database—that is, the trans‐ action sees all the data that was committed in the database at the start of the transac‐ tion. Even if the data is subsequently changed by another transaction, each transaction sees only the old data from that particular point in time.</p>
+<p>Snapshot isolation is a boon for long-running, read-only queries such as backups and analytics.</p>
+<h5 id="Implementing-snapshot-isolation"><a href="#Implementing-snapshot-isolation" class="headerlink" title="Implementing snapshot isolation"></a>Implementing snapshot isolation</h5><p>Like read committed isolation, implementations of snapshot isolation typically use write locks to prevent dirty writes. However, reads do not require any locks. From a performance point of view, a key principle of snapshot isolation is <em>readers never block writers, and writers never block readers</em>. This allows a database to handle long-running read queries on a consistent snapshot at the same time as processing writes normally, without any lock contention between the two.</p>
+<p>The database must potentially keep several different committed versions of an object, because various in-progress trans‐ actions may need to see the state of the database at different points in time. Because it maintains several versions of an object side by side, this technique is known as <em>multi- version concurrency control</em> (MVCC).</p>
+<p>An update is internally translated into a delete and a create. </p>
+<h5 id="Visibility-rules-for-observing-a-consistent-snapshot"><a href="#Visibility-rules-for-observing-a-consistent-snapshot" class="headerlink" title="Visibility rules for observing a consistent snapshot"></a>Visibility rules for observing a consistent snapshot</h5><p>When a transaction reads from the database, transaction IDs are used to decide which objects it can see and which are invisible. By carefully defining visibility rules, the database can present a consistent snapshot of the database to the application. This works as follows:</p>
+<ol>
+<li><p>At the start of each transaction, the database makes a list of all the other transactions that are in progress (not yet committed or aborted) at that time. Any writes that those transactions have made are ignored, even if the transactions subsequently commit.</p>
+</li>
+<li><p>Any writes made by aborted transactions are ignored.</p>
+</li>
+<li><p>Any writes made by transactions with a later transaction ID (i.e., which started after the current transaction started) are ignored, regardless of whether those transactions have committed.</p>
+</li>
+<li><p>All other writes are visible to the application’s queries.</p>
+</li>
+</ol>
+<p>Put another way, an object is visible if both of the following conditions are true:</p>
+<ul>
+<li><p>At the time when the reader’s transaction started, the transaction that created the object had already committed.</p>
+</li>
+<li><p>The object is not marked for deletion, or if it is, the transaction that requested deletion had not yet committed at the time when the reader’s transaction started.</p>
+</li>
+</ul>
+<h5 id="Indexes-and-snapshot-isolation"><a href="#Indexes-and-snapshot-isolation" class="headerlink" title="Indexes and snapshot isolation"></a>Indexes and snapshot isolation</h5><p>…</p>
+<h5 id="Repeatable-read-and-naming-confusion"><a href="#Repeatable-read-and-naming-confusion" class="headerlink" title="Repeatable read and naming confusion"></a>Repeatable read and naming confusion</h5><h4 id="Preventing-Lost-Updates"><a href="#Preventing-Lost-Updates" class="headerlink" title="Preventing Lost Updates"></a>Preventing Lost Updates</h4><p>The <em>lost update</em> problem can occur if an application reads some value from the data‐ base, modifies it, and writes back the modified value (a read-modify-write cycle). If two transactions do this concurrently, one of the modifications can be lost, because the second write does not include the first modification. (We sometimes say that the later write <em>clobbers</em> the earlier write.) This pattern occurs in various different scenarios:</p>
+<ul>
+<li><p>Incrementing a counter or updating an account balance (requires reading the current value, calculating the new value, and writing back the updated value)</p>
+</li>
+<li><p>Making a local change to a complex value, e.g., adding an element to a list within a JSON document (requires parsing the document, making the change, and writ‐ ing back the modified document)</p>
+</li>
+<li><p>Two users editing a wiki page at the same time, where each user saves their changes by sending the entire page contents to the server, overwriting whatever is currently in the database</p>
+</li>
+</ul>
+<h5 id="Atomic-write-operations"><a href="#Atomic-write-operations" class="headerlink" title="Atomic write operations"></a>Atomic write operations</h5><p>Many databases provide atomic update operations, which remove the need to implement read-modify-write cycles in application code. They are usually the best solution if your code can be expressed in terms of those operations. </p>
+<p>Atomic operations are usually implemented by taking an exclusive lock on the object when it is read so that no other transaction can read it until the update has been applied. This technique is sometimes known as cursor stability. Another option is to simply force all atomic operations to be executed on a single thread.</p>
+<h5 id="Explicit-locking"><a href="#Explicit-locking" class="headerlink" title="Explicit locking"></a>Explicit locking</h5><p>Another option for preventing lost updates, if the database’s built-in atomic opera‐ tions don’t provide the necessary functionality, is for the application to explicitly lock objects that are going to be updated. Then the application can perform a read- modify-write cycle, and if any other transaction tries to concurrently read the same object, it is forced to wait until the first read-modify-write cycle has completed.</p>
+<h5 id="Automatically-detecting-lost-updates"><a href="#Automatically-detecting-lost-updates" class="headerlink" title="Automatically detecting lost updates"></a>Automatically detecting lost updates</h5><p>An alternative is to allow them to execute in parallel and, if the transaction manager detects a lost update, abort the transaction and force it to retry its read-modify-write cycle.</p>
+<p>An advantage of this approach is that databases can perform this check efficiently in conjunction with snapshot isolation.</p>
+<h5 id="Compare-and-set"><a href="#Compare-and-set" class="headerlink" title="Compare-and-set"></a>Compare-and-set</h5><p>The purpose of this operation is to avoid lost updates by allowing an update to happen only if the value has not changed since you last read it. If the current value does not match what you previously read, the update has no effect, and the read-modify-write cycle must be retried.</p>
+<p>Check whether your database’s compare-and-set operation is safe before relying on it.</p>
+<h5 id="Conflict-resolution-and-replication"><a href="#Conflict-resolution-and-replication" class="headerlink" title="Conflict resolution and replication"></a>Conflict resolution and replication</h5><p>Locks and compare-and-set operations assume that there is a single up-to-date copy of the data. However, they do not apply in the context that databases with multi-leader or leaderless replication.</p>
+<p>Atomic operations can work well in a replicated context.</p>
+<p>On the other hand, the last write wins (LWW) conflict resolution method is prone to lost updates.</p>
+<h4 id="Write-Skew-and-Phantoms"><a href="#Write-Skew-and-Phantoms" class="headerlink" title="Write Skew and Phantoms"></a>Write Skew and Phantoms</h4><h5 id="Characterizing-write-skew"><a href="#Characterizing-write-skew" class="headerlink" title="Characterizing write skew"></a>Characterizing write skew</h5><p><em>Write skew</em> is neither a dirty write nor a lost update, because the two transactions are updating two different objects.</p>
+<p>You can think of write skew as a generalization of the lost update problem. Write skew can occur if two transactions read the same objects, and then update some of those objects (different transactions may update different objects). In the special case where different transactions update the same object, you get a dirty write or lost update anomaly (depending on the timing).</p>
+<p>If you can’t use a serializable isolation level, the second-best option in this case is probably to explicitly lock the rows that the transaction depends on. </p>
+<h5 id="More-examples-of-write-skew"><a href="#More-examples-of-write-skew" class="headerlink" title="More examples of write skew"></a>More examples of write skew</h5><h5 id="Phantoms-causing-write-skew"><a href="#Phantoms-causing-write-skew" class="headerlink" title="Phantoms causing write skew"></a>Phantoms causing write skew</h5><p>All of these examples follow a similar pattern:</p>
+<ol>
+<li><p>A SELECT query checks whether some requirement is satisfied by searching for rows that match some search condition (there are at least two doctors on call, there are no existing bookings for that room at that time, the position on the board doesn’t already have another figure on it, the username isn’t already taken, there is still money in the account).</p>
+</li>
+<li><p>Depending on the result of the first query, the application code decides how to continue (perhaps to go ahead with the operation, or perhaps to report an error to the user and abort).</p>
+</li>
+<li><p>If the application decides to go ahead, it makes a write (INSERT, UPDATE, or DELETE) to the database and commits the transaction.</p>
+</li>
+<li><p>The effect of this write changes the precondition of the decision of step 2. In other words, if you were to repeat the SELECT query from step 1 after commiting the write, you would get a different result, because the write changed the set of rows matching the search condition (there is now one fewer doctor on call, the meeting room is now booked for that time, the position on the board is now taken by the figure that was moved, the username is now taken, there is now less money in the account).</p>
+</li>
+</ol>
+<p>This effect, where a write in one transaction changes the result of a search query in another transaction, is called a <em>phantom</em>. Snapshot isolation avoids phantoms in read-only queries, but in read-write transactions like the examples we discussed, phantoms can lead to particularly tricky cases of write skew.</p>
+<h5 id="Materializing-conflicts"><a href="#Materializing-conflicts" class="headerlink" title="Materializing conflicts"></a>Materializing conflicts</h5><p>If the problem of phantoms is that there is no object to which we can attach the locks, perhaps we can artificially introduce a lock object into the database?</p>
+<p>This approach is called <em>materializing conflicts</em>, because it takes a phantom and turns it into a lock conflict on a concrete set of rows that exist in the database.</p>
+<h3 id="Serializability"><a href="#Serializability" class="headerlink" title="Serializability"></a>Serializability</h3><p>Most databases that provide serializability today use one of three techniques, which we will explore in the rest of this chapter:</p>
+<ul>
+<li><p>Literally executing transactions in a serial order</p>
+</li>
+<li><p>Two-phase locking, which for several decades was the only viable option</p>
+</li>
+<li><p>Optimistic concurrency control techniques such as serializable snapshot isolation</p>
+</li>
+</ul>
+<h4 id="Actual-Serial-Execution"><a href="#Actual-Serial-Execution" class="headerlink" title="Actual Serial Execution"></a>Actual Serial Execution</h4><p>Two developments caused this rethink:</p>
+<ul>
+<li><p>RAM became cheap enough that for many use cases is now feasible to keep the entire active dataset in memory.</p>
+</li>
+<li><p>Database designers realized that OLTP transactions are usually short and only make a small number of reads and writes. By contrast, long-running analytic queries are typically read- only, so they can be run on a consistent snapshot (using snapshot isolation) outside of the serial execution loop.</p>
+</li>
+</ul>
+<p>In order to make the most of that single thread, transac‐ tions need to be structured differently from their traditional form.</p>
+<h5 id="Encapsulating-transactions-in-stored-procedures"><a href="#Encapsulating-transactions-in-stored-procedures" class="headerlink" title="Encapsulating transactions in stored procedures"></a>Encapsulating transactions in stored procedures</h5><p>The application must submit the entire transaction code to the database ahead of time, as a <em>stored procedure</em>. </p>
+<h5 id="Pros-and-cons-of-stored-procedures"><a href="#Pros-and-cons-of-stored-procedures" class="headerlink" title="Pros and cons of stored procedures"></a>Pros and cons of stored procedures</h5><p>Stored procedures have gained a somewhat bad reputation, for various reasons:</p>
+<ul>
+<li><p>Each database vendor has its own language for stored procedures. These languages haven’t kept up with developments in general-purpose programming languages, so they look quite ugly and archaic from today’s point of view, and they lack the ecosystem of libraries that you find with most programming languages.</p>
+</li>
+<li><p>Code running in a database is difficult to manage: compared to an application server, it’s harder to debug, more awkward to keep in version control and deploy, trickier to test, and difficult to integrate with a metrics collection system for monitoring.</p>
+</li>
+<li><p>A database is often much more performance-sensitive than an application server. A badly written stored procedure in a database can cause much more trouble than equivalent badly written code in an application server.</p>
+</li>
+</ul>
+<p>With stored procedures and in-memory data, executing all transactions on a single thread becomes feasible. </p>
+<h5 id="Partitioning"><a href="#Partitioning" class="headerlink" title="Partitioning"></a>Partitioning</h5><p>If you can find a way of partitioning your dataset so that each transaction only needs to read and write data within a single partition, then each partition can have its own transaction processing thread running independently from the others. </p>
+<p>However, for any transaction that needs to access multiple partitions, the database must coordinate the transaction across all the partitions that it touches. The stored procedure needs to be performed in lock-step across all partitions to ensure serializa‐ bility across the whole system.</p>
+<h5 id="Summary-of-serial-execution"><a href="#Summary-of-serial-execution" class="headerlink" title="Summary of serial execution"></a>Summary of serial execution</h5><p>Serial execution of transactions has become a viable way of achieving serializable iso‐ lation within certain constraints:</p>
+<ul>
+<li><p>Every transaction must be small and fast, because it takes only one slow transac‐ tion to stall all transaction processing.</p>
+</li>
+<li><p>It is limited to use cases where the active dataset can fit in memory. Rarely accessed data could potentially be moved to disk, but if it needed to be accessed in a single-threaded transaction, the system would get very slow.x</p>
+</li>
+<li><p>Write throughput must be low enough to be handled on a single CPU core, or else transactions need to be partitioned without requiring cross-partition coordination.</p>
+</li>
+<li><p>Cross-partition transactions are possible, but there is a hard limit to the extent to which they can be used.</p>
+</li>
+</ul>
+<h4 id="Two-Phase-Locking-2PL"><a href="#Two-Phase-Locking-2PL" class="headerlink" title="Two-Phase Locking (2PL)"></a>Two-Phase Locking (2PL)</h4><p>Sev‐ eral transactions are allowed to concurrently read the same object as long as nobody is writing to it. But as soon as anyone wants to write (modify or delete) an object, exclusive access is required:</p>
+<ul>
+<li><p>If transaction A has read an object and transaction B wants to write to that object, B must wait until A commits or aborts before it can continue. (This ensures that B can’t change the object unexpectedly behind A’s back.)</p>
+</li>
+<li><p>If transaction A has written an object and transaction B wants to read that object, B must wait until A commits or aborts before it can continue. </p>
+</li>
+</ul>
+<p>In 2PL, writers don’t just block other writers; they also block readers and vice versa.</p>
+<h5 id="Implementation-of-two-phase-locking"><a href="#Implementation-of-two-phase-locking" class="headerlink" title="Implementation of two-phase locking"></a>Implementation of two-phase locking</h5><p>The blocking of readers and writers is implemented by a having a lock on each object in the database. The lock can either be in <em>shared mode</em> or in <em>exclusive mode</em>. The lock is used as follows:</p>
+<ul>
+<li><p>If a transaction wants to read an object, it must first acquire the lock in shared mode. Several transactions are allowed to hold the lock in shared mode simulta‐ neously, but if another transaction already has an exclusive lock on the object, these transactions must wait.</p>
+</li>
+<li><p>If a transaction wants to write to an object, it must first acquire the lock in exclusive mode. </p>
+</li>
+<li><p>If a transaction first reads and then writes an object, it may upgrade its shared lock to an exclusive lock. The upgrade works the same as getting an exclusive lock directly.</p>
+</li>
+<li><p>After a transaction has acquired the lock, it must continue to hold the lock until the end of the transaction (commit or abort). This is where the name “two-phase” comes from: the first phase (while the transaction is executing) is when the locks are acquired, and the second phase (at the end of the transaction) is when all the locks are released.</p>
+</li>
+</ul>
+<p>Since so many locks are in use, it can happen quite easily that transaction A is stuck waiting for transaction B to release its lock, and vice versa. This situation is called deadlock. The database automatically detects deadlocks between transactions and aborts one of them so that the others can make progress. The aborted transaction needs to be retried by the application.</p>
+<h5 id="Performance-of-two-phase-locking"><a href="#Performance-of-two-phase-locking" class="headerlink" title="Performance of two-phase locking"></a>Performance of two-phase locking</h5><p>Although deadlocks can happen with the lock-based read committed isolation level, they occur much more frequently under 2PL serializable isolation (depending on the access patterns of your transaction). This can be an additional performance problem: when a transaction is aborted due to deadlock and is retried, it needs to do its work all over again. If deadlocks are frequent, this can mean significant wasted effort.</p>
+<h5 id="Predicate-locks"><a href="#Predicate-locks" class="headerlink" title="Predicate locks"></a>Predicate locks</h5><p>A database with serializable isolation must prevent phantoms.</p>
+<p>How do we implement this? Conceptually, we need a <em>predicate lock</em>. It works similarly to the shared/exclusive lock described earlier, but rather than belonging to a particular object (e.g., one row in a table), it belongs to all objects that match some search condition.</p>
+<p>A predicate lock restricts access as follows:</p>
+<ul>
+<li><p>If transaction A wants to read objects matching some condition, like in that SELECT query, it must acquire a shared-mode predicate lock on the conditions of the query. If another transaction B currently has an exclusive lock on any object matching those conditions, A must wait until B releases its lock before it is allowed to make its query.</p>
+</li>
+<li><p>If transaction A wants to insert, update, or delete any object, it must first check whether either the old or the new value matches any existing predicate lock. If there is a matching predicate lock held by transaction B, then A must wait until B has committed or aborted before it can continue.</p>
+</li>
+</ul>
+<p>The key idea here is that a predicate lock applies even to objects that do not yet exist in the database, but which might be added in the future (phantoms). If two-phase locking includes predicate locks, the database prevents all forms of write skew and other race conditions, and so its isolation becomes serializable.</p>
+<h5 id="Index-range-locks"><a href="#Index-range-locks" class="headerlink" title="Index-range locks"></a>Index-range locks</h5><p>Most databases with 2PL actually implement <em>index-range locking</em> (also known as <em>next-key locking</em>), which is a simplified approximation of predicate locking.</p>
+<p>Index-range locks are not as precise as predicate locks would be (they may lock a bigger range of objects than is strictly necessary to maintain serializability), but since they have much lower overheads, they are a good compromise.</p>
+<p>If there is no suitable index where a range lock can be attached, the database can fall back to a shared lock on the entire table.</p>
+<h4 id="Serializable-Snapshot-Isolation-SSI"><a href="#Serializable-Snapshot-Isolation-SSI" class="headerlink" title="Serializable Snapshot Isolation (SSI)"></a>Serializable Snapshot Isolation (SSI)</h4><h5 id="Pessimistic-versus-optimistic-concurrency-control"><a href="#Pessimistic-versus-optimistic-concurrency-control" class="headerlink" title="Pessimistic versus optimistic concurrency control"></a>Pessimistic versus optimistic concurrency control</h5><p>Two-phase locking is a so-called <em>pessimistic</em> concurrency control mechanism.</p>
+<p>By contrast, serializable snapshot isolation is an <em>optimistic</em> concurrency control technique. Optimistic in this context means that instead of blocking if something potentially dangerous happens, transactions continue anyway, in the hope that everything will turn out all right. When a transaction wants to commit, the database checks whether anything bad happened (i.e., whether isolation was violated); if so, the transaction is aborted and has to be retried. Only transactions that executed serializably are allowed to commit.</p>
+<p>On top of snapshot isolation, SSI adds an algorithm for detecting serialization conflicts among writes and determining which transactions to abort.</p>
+<h5 id="Decisions-based-on-an-outdated-premise"><a href="#Decisions-based-on-an-outdated-premise" class="headerlink" title="Decisions based on an outdated premise"></a>Decisions based on an outdated premise</h5><p>To be safe, the database needs to assume that any change in the query result (the premise) means that writes in that transaction may be invalid.  In order to provide serializable isolation, the database must detect situations in which a transaction may have acted on an outdated premise and abort the transaction in that case.</p>
+<p>How does the database know if a query result might have changed? There are two cases to consider:</p>
+<ul>
+<li><p>Detecting reads of a stale MVCC object version (uncommitted write occurred before the read)</p>
+</li>
+<li><p>Detecting writes that affect prior reads (the write occurs after the read)</p>
+</li>
+</ul>
+<h5 id="Detecting-stale-MVCC-reads"><a href="#Detecting-stale-MVCC-reads" class="headerlink" title="Detecting stale MVCC reads"></a>Detecting stale MVCC reads</h5><p>When the transac‐ tion wants to commit, the database checks whether any of the ignored writes have now been committed. If so, the transaction must be aborted.</p>
+<p>By avoiding unnecessary aborts, SSI preserves snapshot isolation’s support for long-running reads from a consistent snapshot.</p>
+<h5 id="Detecting-writes-that-affect-prior-reads"><a href="#Detecting-writes-that-affect-prior-reads" class="headerlink" title="Detecting writes that affect prior reads"></a>Detecting writes that affect prior reads</h5><p>When a transaction writes to the database, it must look in the indexes for any other transactions that have recently read the affected data. This process is similar to acquiring a write lock on the affected key range, but rather than blocking until the readers have committed, the lock acts as a tripwire: it simply notifies the transactions that the data they read may no longer be up to date.</p>
+<h5 id="Performance-of-serializable-snapshot-isolation"><a href="#Performance-of-serializable-snapshot-isolation" class="headerlink" title="Performance of serializable snapshot isolation"></a>Performance of serializable snapshot isolation</h5><p>As always, many engineering details affect how well an algorithm works in practice. For example, one trade-off is the granularity at which transactions’ reads and writes are tracked. Less detailed tracking is faster, but may lead to more transac‐ tions being aborted than strictly necessary.</p>
+<p>In some cases, it’s okay for a transaction to read information that was overwritten by another transaction: depending on what else happened, it’s sometimes possible to prove that the result of the execution is nevertheless serializable. PostgreSQL uses this theory to reduce the number of unnecessary aborts.</p>
+<p>Compared to two-phase locking, the big advantage of serializable snapshot isolation is that one transaction doesn’t need to block waiting for locks held by another transaction. </p>
+<p>The rate of aborts significantly affects the overall performance of SSI.</p>
+<h3 id="Summary"><a href="#Summary" class="headerlink" title="Summary"></a>Summary</h3><p>…</p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/blog/tags/note/" rel="tag"># note</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/blog/2020/08/12/DDIA6/" rel="prev" title="Note for DDIA in Chapter 6">
+      <i class="fa fa-chevron-left"></i> Note for DDIA in Chapter 6
+    </a></div>
+      <div class="post-nav-item"></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+        </div>
+        
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Ray Chen</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/muse/" class="theme-link" rel="noopener" target="_blank">NexT.Muse</a>
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/blog/lib/anime.min.js"></script>
+
+<script src="/blog/js/utils.js"></script>
+
+<script src="/blog/js/motion.js"></script>
+
+
+<script src="/blog/js/schemes/muse.js"></script>
+
+
+<script src="/blog/js/next-boot.js"></script>
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>
