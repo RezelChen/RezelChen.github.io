@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 4.2.1">
+  <link rel="apple-touch-icon" sizes="180x180" href="/blog/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/blog/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/blog/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/blog/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/blog/css/main.css">
+
+
+<link rel="stylesheet" href="/blog/lib/font-awesome/css/all.min.css">
+  
+  <link rel="stylesheet" href="/blog/lib/animate-css/animate.min.css">
+
+<script class="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"rezelchen.github.io","root":"/blog/","scheme":"Muse","version":"8.0.0-rc.4","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12},"copycode":false,"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}}};
+  </script>
+
+  <meta name="description" content="The Trouble with Distributed SystemsFaults and Partial FailuresAn individual computer with good software is usually either fully functional or entirely broken, but not something in between. This is a">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Note for DDIA in Chapter 7">
+<meta property="og:url" content="https://rezelchen.github.io/2020/08/13/DDIA8/index.html">
+<meta property="og:site_name" content="Ray Chen&#39;s Blog">
+<meta property="og:description" content="The Trouble with Distributed SystemsFaults and Partial FailuresAn individual computer with good software is usually either fully functional or entirely broken, but not something in between. This is a">
+<meta property="og:locale" content="en_US">
+<meta property="article:published_time" content="2020-08-13T19:53:00.000Z">
+<meta property="article:modified_time" content="2020-08-17T15:39:30.232Z">
+<meta property="article:author" content="Ray Chen">
+<meta property="article:tag" content="note">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="https://rezelchen.github.io/2020/08/13/DDIA8/">
+
+
+<script class="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'en'
+  };
+</script>
+
+  <title>Note for DDIA in Chapter 7 | Ray Chen's Blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  body { margin-top: 2rem; }
+
+  .use-motion .menu-item,
+  .use-motion .sidebar,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header {
+    visibility: visible;
+  }
+
+  .use-motion .header,
+  .use-motion .site-brand-container .toggle,
+  .use-motion .footer { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle,
+  .use-motion .custom-logo-image {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line {
+    transform: scaleX(1);
+  }
+
+  .search-pop-overlay, .sidebar-nav { display: none; }
+  .sidebar-panel { display: block; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <main class="main">
+      <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+        <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/blog/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <h1 class="site-title">Ray Chen's Blog</h1>
+      <i class="logo-line"></i>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+
+
+
+</div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <section class="post-toc-wrap sidebar-panel">
+          <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#The-Trouble-with-Distributed-Systems"><span class="nav-number">1.</span> <span class="nav-text">The Trouble with Distributed Systems</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Faults-and-Partial-Failures"><span class="nav-number">1.1.</span> <span class="nav-text">Faults and Partial Failures</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#Cloud-Computing-and-Supercomputing"><span class="nav-number">1.1.1.</span> <span class="nav-text">Cloud Computing and Supercomputing</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Unreliable-Networks"><span class="nav-number">1.2.</span> <span class="nav-text">Unreliable Networks</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#Network-Faults-in-Practice"><span class="nav-number">1.2.1.</span> <span class="nav-text">Network Faults in Practice</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Detecting-Faults"><span class="nav-number">1.2.2.</span> <span class="nav-text">Detecting Faults</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Timeouts-and-Unbounded-Delays"><span class="nav-number">1.2.3.</span> <span class="nav-text">Timeouts and Unbounded Delays</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#Network-congestion-and-queueing"><span class="nav-number">1.2.3.1.</span> <span class="nav-text">Network congestion and queueing</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Synchronous-Versus-Asynchronous-Networks"><span class="nav-number">1.2.4.</span> <span class="nav-text">Synchronous Versus Asynchronous Networks</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#Can-we-not-simply-make-network-delays-predictable"><span class="nav-number">1.2.4.1.</span> <span class="nav-text">Can we not simply make network delays predictable?</span></a></li></ol></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Unreliable-Clocks"><span class="nav-number">1.3.</span> <span class="nav-text">Unreliable Clocks</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#Monotonic-Versus-Time-of-Day-Clocks"><span class="nav-number">1.3.1.</span> <span class="nav-text">Monotonic Versus Time-of-Day Clocks</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#Time-of-day-clocks"><span class="nav-number">1.3.1.1.</span> <span class="nav-text">Time-of-day clocks</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#Monotonic-clocks"><span class="nav-number">1.3.1.2.</span> <span class="nav-text">Monotonic clocks</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Clock-Synchronization-and-Accuracy"><span class="nav-number">1.3.2.</span> <span class="nav-text">Clock Synchronization and Accuracy</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Relying-on-Synchronized-Clocks"><span class="nav-number">1.3.3.</span> <span class="nav-text">Relying on Synchronized Clocks</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Process-Pauses"><span class="nav-number">1.3.4.</span> <span class="nav-text">Process Pauses</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#Response-time-guarantees"><span class="nav-number">1.3.4.1.</span> <span class="nav-text">Response time guarantees</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#Limiting-the-impact-of-garbage-collection"><span class="nav-number">1.3.4.2.</span> <span class="nav-text">Limiting the impact of garbage collection</span></a></li></ol></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Knowledge-Truth-and-Lies"><span class="nav-number">1.4.</span> <span class="nav-text">Knowledge, Truth, and Lies</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#The-Truth-Is-Defined-by-the-Majority"><span class="nav-number">1.4.1.</span> <span class="nav-text">The Truth Is Defined by the Majority</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#The-leader-and-the-lock"><span class="nav-number">1.4.1.1.</span> <span class="nav-text">The leader and the lock</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#Fencing-tokens"><span class="nav-number">1.4.1.2.</span> <span class="nav-text">Fencing tokens</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Byzantine-Faults"><span class="nav-number">1.4.2.</span> <span class="nav-text">Byzantine Faults</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#System-Model-and-Reality"><span class="nav-number">1.4.3.</span> <span class="nav-text">System Model and Reality</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#Correctness-of-an-algorithm"><span class="nav-number">1.4.3.1.</span> <span class="nav-text">Correctness of an algorithm</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#Safety-and-liveness"><span class="nav-number">1.4.3.2.</span> <span class="nav-text">Safety and liveness</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#Mapping-system-models-to-the-real-world"><span class="nav-number">1.4.3.3.</span> <span class="nav-text">Mapping system models to the real world</span></a></li></ol></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Summary"><span class="nav-number">1.5.</span> <span class="nav-text">Summary</span></a></li></ol></li></ol></div>
+      </section>
+      <!--/noindex-->
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-author animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">Ray Chen</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/blog/archives">
+          <span class="site-state-item-count">8</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-tags">
+        <span class="site-state-item-count">1</span>
+        <span class="site-state-item-name">tags</span>
+      </div>
+  </nav>
+</div>
+
+
+
+      </section>
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </header>
+
+      
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div id="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+
+      <div class="main-inner">
+        
+
+        <div class="content post posts-expand">
+          
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
+    <link itemprop="mainEntityOfPage" href="https://rezelchen.github.io/2020/08/13/DDIA8/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/blog/images/avatar.gif">
+      <meta itemprop="name" content="Ray Chen">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Ray Chen's Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Note for DDIA in Chapter 7
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+
+              <time title="Created: 2020-08-13 19:53:00" itemprop="dateCreated datePublished" datetime="2020-08-13T19:53:00+00:00">2020-08-13</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">Edited on</span>
+                <time title="Modified: 2020-08-17 15:39:30" itemprop="dateModified" datetime="2020-08-17T15:39:30+00:00">2020-08-17</time>
+              </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h2 id="The-Trouble-with-Distributed-Systems"><a href="#The-Trouble-with-Distributed-Systems" class="headerlink" title="The Trouble with Distributed Systems"></a>The Trouble with Distributed Systems</h2><h3 id="Faults-and-Partial-Failures"><a href="#Faults-and-Partial-Failures" class="headerlink" title="Faults and Partial Failures"></a>Faults and Partial Failures</h3><p>An individual computer with good software is usually either fully functional or entirely broken, but not something in between.</p>
+<p>This is a deliberate choice in the design of computers: if an internal fault occurs, we prefer a computer to crash completely rather than returning a wrong result, because wrong results are difficult and confusing to deal with. </p>
+<p>When you are writing software that runs on several computers, connected by a net‐ work, the situation is fundamentally different. </p>
+<p>This nondeterminism and possibility of partial failures is what makes distributed sys‐ tems hard to work with.</p>
+<h4 id="Cloud-Computing-and-Supercomputing"><a href="#Cloud-Computing-and-Supercomputing" class="headerlink" title="Cloud Computing and Supercomputing"></a>Cloud Computing and Supercomputing</h4><p>If we want to make distributed systems work, we must accept the possibility of partial failure and build fault-tolerance mechanisms into the software. In other words, we need to build a reliable system from unreliable components.</p>
+<h3 id="Unreliable-Networks"><a href="#Unreliable-Networks" class="headerlink" title="Unreliable Networks"></a>Unreliable Networks</h3><h4 id="Network-Faults-in-Practice"><a href="#Network-Faults-in-Practice" class="headerlink" title="Network Faults in Practice"></a>Network Faults in Practice</h4><h4 id="Detecting-Faults"><a href="#Detecting-Faults" class="headerlink" title="Detecting Faults"></a>Detecting Faults</h4><h4 id="Timeouts-and-Unbounded-Delays"><a href="#Timeouts-and-Unbounded-Delays" class="headerlink" title="Timeouts and Unbounded Delays"></a>Timeouts and Unbounded Delays</h4><h5 id="Network-congestion-and-queueing"><a href="#Network-congestion-and-queueing" class="headerlink" title="Network congestion and queueing"></a>Network congestion and queueing</h5><h4 id="Synchronous-Versus-Asynchronous-Networks"><a href="#Synchronous-Versus-Asynchronous-Networks" class="headerlink" title="Synchronous Versus Asynchronous Networks"></a>Synchronous Versus Asynchronous Networks</h4><h5 id="Can-we-not-simply-make-network-delays-predictable"><a href="#Can-we-not-simply-make-network-delays-predictable" class="headerlink" title="Can we not simply make network delays predictable?"></a>Can we not simply make network delays predictable?</h5><h3 id="Unreliable-Clocks"><a href="#Unreliable-Clocks" class="headerlink" title="Unreliable Clocks"></a>Unreliable Clocks</h3><p>Clocks and time are important. Applications depend on clocks in various ways to answer questions like the following:</p>
+<ol>
+<li>Has this request timed out yet?</li>
+<li>What’s the 99th percentile response time of this service?</li>
+<li>How many queries per second did this service handle on average in the last five minutes?</li>
+<li>How long did the user spend on our site?</li>
+<li>When was this article published?</li>
+<li>At what date and time should the reminder email be sent?</li>
+<li>When does this cache entry expire?</li>
+<li>What is the timestamp on this error message in the log file?</li>
+</ol>
+<h4 id="Monotonic-Versus-Time-of-Day-Clocks"><a href="#Monotonic-Versus-Time-of-Day-Clocks" class="headerlink" title="Monotonic Versus Time-of-Day Clocks"></a>Monotonic Versus Time-of-Day Clocks</h4><h5 id="Time-of-day-clocks"><a href="#Time-of-day-clocks" class="headerlink" title="Time-of-day clocks"></a>Time-of-day clocks</h5><p>A time-of-day clock does what you intuitively expect of a clock: it returns the current date and time according to some calendar (also known as wall-clock time). </p>
+<p>Time-of-day clocks are usually synchronized with NTP, which means that a time‐ stamp from one machine (ideally) means the same as a timestamp on another machine. </p>
+<h5 id="Monotonic-clocks"><a href="#Monotonic-clocks" class="headerlink" title="Monotonic clocks"></a>Monotonic clocks</h5><p>A monotonic clock is suitable for measuring a duration. The name comes from the fact that they are guaranteed to always move forward (whereas a time-of- day clock may jump back in time).</p>
+<p>In a distributed system, using a monotonic clock for measuring elapsed time (e.g., timeouts) is usually fine, because it doesn’t assume any synchronization between dif‐ ferent nodes’ clocks and is not sensitive to slight inaccuracies of measurement.</p>
+<h4 id="Clock-Synchronization-and-Accuracy"><a href="#Clock-Synchronization-and-Accuracy" class="headerlink" title="Clock Synchronization and Accuracy"></a>Clock Synchronization and Accuracy</h4><p>It is possible to achieve very good clock accuracy if you care about it sufficiently to invest significant resources. Such accuracy can be achieved using GPS receivers, the Precision Time Protocol (PTP), and careful deployment and monitoring. However, it requires significant effort and expertise, and there are plenty of ways clock synchronization can go wrong.</p>
+<h4 id="Relying-on-Synchronized-Clocks"><a href="#Relying-on-Synchronized-Clocks" class="headerlink" title="Relying on Synchronized Clocks"></a>Relying on Synchronized Clocks</h4><p>…</p>
+<h4 id="Process-Pauses"><a href="#Process-Pauses" class="headerlink" title="Process Pauses"></a>Process Pauses</h4><h5 id="Response-time-guarantees"><a href="#Response-time-guarantees" class="headerlink" title="Response time guarantees"></a>Response time guarantees</h5><h5 id="Limiting-the-impact-of-garbage-collection"><a href="#Limiting-the-impact-of-garbage-collection" class="headerlink" title="Limiting the impact of garbage collection"></a>Limiting the impact of garbage collection</h5><p>A variant of this idea is to use the garbage collector only for short-lived objects (which are fast to collect) and to restart processes periodically, before they accumu‐ late enough long-lived objects to require a full GC of long-lived objects. One node can be restarted at a time, and traffic can be shifted away from the node before the planned restart, like in a rolling upgrade.</p>
+<h3 id="Knowledge-Truth-and-Lies"><a href="#Knowledge-Truth-and-Lies" class="headerlink" title="Knowledge, Truth, and Lies"></a>Knowledge, Truth, and Lies</h3><h4 id="The-Truth-Is-Defined-by-the-Majority"><a href="#The-Truth-Is-Defined-by-the-Majority" class="headerlink" title="The Truth Is Defined by the Majority"></a>The Truth Is Defined by the Majority</h4><p>Instead, many distributed algorithms rely on a quorum, that is, voting among the nodes: decisions require some minimum number of votes from several nodes in order to reduce the dependence on any one particular node.</p>
+<h5 id="The-leader-and-the-lock"><a href="#The-leader-and-the-lock" class="headerlink" title="The leader and the lock"></a>The leader and the lock</h5><p>Frequently, a system requires there to be only one of some thing. For example:</p>
+<ul>
+<li><p>Only one node is allowed to be the leader for a database partition, to avoid split<br>brain.</p>
+</li>
+<li><p>Only one transaction or client is allowed to hold the lock for a particular resource<br>or object, to prevent concurrently writing to it and corrupting it.</p>
+</li>
+<li><p>Only one user is allowed to register a particular username, because a username must uniquely identify a user.</p>
+</li>
+</ul>
+<h5 id="Fencing-tokens"><a href="#Fencing-tokens" class="headerlink" title="Fencing tokens"></a>Fencing tokens</h5><p>Checking a token on the server side may seem like a downside, but it is arguably a good thing: it is unwise for a service to assume that its clients will always be well behaved, because the clients are often run by people whose priorities are very differ‐ ent from the priorities of the people running the service. Thus, it is a good idea for any service to protect itself from accidentally abusive clients.</p>
+<h4 id="Byzantine-Faults"><a href="#Byzantine-Faults" class="headerlink" title="Byzantine Faults"></a>Byzantine Faults</h4><p>…</p>
+<h4 id="System-Model-and-Reality"><a href="#System-Model-and-Reality" class="headerlink" title="System Model and Reality"></a>System Model and Reality</h4><p>With regard to timing assumptions, three system models are in common use:</p>
+<ul>
+<li><p>Synchronous model: The synchronous model assumes bounded network delay, bounded process pau‐ ses, and bounded clock error. This does not imply exactly synchronized clocks or zero network delay; it just means you know that network delay, pauses, and clock drift will never exceed some fixed upper bound. </p>
+</li>
+<li><p>Partially synchronous model: Partial synchrony means that a system behaves like a synchronous system most of the time, but it sometimes exceeds the bounds for network delay, process pauses, and clock drift.</p>
+</li>
+<li><p>Asynchronous model: In this model, an algorithm is not allowed to make any timing assumptions.</p>
+</li>
+</ul>
+<p>Moreover, besides timing issues, we have to consider node failures. The three most common system models for nodes are:</p>
+<ul>
+<li><p>Crash-stop faults: In the crash-stop model, an algorithm may assume that a node can fail in only one way, namely by crashing. This means that the node may suddenly stop responding at any moment, and thereafter that node is gone forever—it never comes back.</p>
+</li>
+<li><p>Crash-recovery faults: We assume that nodes may crash at any moment, and perhaps start responding again after some unknown time. In the crash-recovery model, nodes are assumed to have stable storage (i.e., nonvolatile disk storage) that is preserved across crashes, while the in-memory state is assumed to be lost.</p>
+</li>
+<li><p>Byzantine (arbitrary) faults: Nodes may do absolutely anything, including trying to trick and deceive other nodes, as described in the last section.</p>
+</li>
+</ul>
+<p>For modeling real systems, the partially synchronous model with crash-recovery faults is generally the most useful model. </p>
+<h5 id="Correctness-of-an-algorithm"><a href="#Correctness-of-an-algorithm" class="headerlink" title="Correctness of an algorithm"></a>Correctness of an algorithm</h5><h5 id="Safety-and-liveness"><a href="#Safety-and-liveness" class="headerlink" title="Safety and liveness"></a>Safety and liveness</h5><p><em>Safety</em> is often informally defined as <em>nothing bad happens</em>, and <em>liveness</em> as <em>something good eventually happens</em>.</p>
+<p>The actual definitions of safety and liveness are precise and mathematical:</p>
+<ul>
+<li><p>If a safety property is violated, we can point at a particular point in time at which it was broken. After a safety property has been violated, the violation cannot be undone—the damage is already done.</p>
+</li>
+<li><p>A liveness property works the other way round: it may not hold at some point in time, but there is always hope that it may be satisfied in the future.</p>
+</li>
+</ul>
+<h5 id="Mapping-system-models-to-the-real-world"><a href="#Mapping-system-models-to-the-real-world" class="headerlink" title="Mapping system models to the real world"></a>Mapping system models to the real world</h5><h3 id="Summary"><a href="#Summary" class="headerlink" title="Summary"></a>Summary</h3><p>…</p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/blog/tags/note/" rel="tag"># note</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/blog/2020/08/13/DDIA7/" rel="prev" title="Note for DDIA in Chapter 7">
+      <i class="fa fa-chevron-left"></i> Note for DDIA in Chapter 7
+    </a></div>
+      <div class="post-nav-item"></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+        </div>
+        
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Ray Chen</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/muse/" class="theme-link" rel="noopener" target="_blank">NexT.Muse</a>
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/blog/lib/anime.min.js"></script>
+
+<script src="/blog/js/utils.js"></script>
+
+<script src="/blog/js/motion.js"></script>
+
+
+<script src="/blog/js/schemes/muse.js"></script>
+
+
+<script src="/blog/js/next-boot.js"></script>
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>
