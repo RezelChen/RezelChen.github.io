@@ -1,5 +1,5 @@
 ---
-title: Note for DDIA in Chapter 7
+title: Note for DDIA in Chapter 8
 date: 2020-08-13 19:53:00
 tags: note
 ---
