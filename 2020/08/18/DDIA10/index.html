@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 4.2.1">
+  <link rel="apple-touch-icon" sizes="180x180" href="/blog/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/blog/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/blog/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/blog/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/blog/css/main.css">
+
+
+<link rel="stylesheet" href="/blog/lib/font-awesome/css/all.min.css">
+  
+  <link rel="stylesheet" href="/blog/lib/animate-css/animate.min.css">
+
+<script class="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"rezelchen.github.io","root":"/blog/","scheme":"Muse","version":"8.0.0-rc.4","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12},"copycode":false,"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}}};
+  </script>
+
+  <meta name="description" content="Batch ProcessingLet’s distinguish three different types of systems:  Services (online systems) Batch processing systems (offline systems) Stream processing systems (near-real-time systems)  Batch Proc">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Note for DDIA in Chapter 10">
+<meta property="og:url" content="https://rezelchen.github.io/2020/08/18/DDIA10/index.html">
+<meta property="og:site_name" content="Ray Chen&#39;s Blog">
+<meta property="og:description" content="Batch ProcessingLet’s distinguish three different types of systems:  Services (online systems) Batch processing systems (offline systems) Stream processing systems (near-real-time systems)  Batch Proc">
+<meta property="og:locale" content="en_US">
+<meta property="article:published_time" content="2020-08-18T18:23:00.000Z">
+<meta property="article:modified_time" content="2020-08-20T07:33:40.920Z">
+<meta property="article:author" content="Ray Chen">
+<meta property="article:tag" content="note">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="https://rezelchen.github.io/2020/08/18/DDIA10/">
+
+
+<script class="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'en'
+  };
+</script>
+
+  <title>Note for DDIA in Chapter 10 | Ray Chen's Blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  body { margin-top: 2rem; }
+
+  .use-motion .menu-item,
+  .use-motion .sidebar,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header {
+    visibility: visible;
+  }
+
+  .use-motion .header,
+  .use-motion .site-brand-container .toggle,
+  .use-motion .footer { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle,
+  .use-motion .custom-logo-image {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line {
+    transform: scaleX(1);
+  }
+
+  .search-pop-overlay, .sidebar-nav { display: none; }
+  .sidebar-panel { display: block; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <main class="main">
+      <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+        <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/blog/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <h1 class="site-title">Ray Chen's Blog</h1>
+      <i class="logo-line"></i>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+
+
+
+</div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <section class="post-toc-wrap sidebar-panel">
+          <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#Batch-Processing"><span class="nav-number">1.</span> <span class="nav-text">Batch Processing</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Batch-Processing-with-Unix-Tools"><span class="nav-number">1.1.</span> <span class="nav-text">Batch Processing with Unix Tools</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#Simple-Log-Analysis"><span class="nav-number">1.1.1.</span> <span class="nav-text">Simple Log Analysis</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#Chain-of-commands-versus-custom-program"><span class="nav-number">1.1.1.1.</span> <span class="nav-text">Chain of commands versus custom program</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#Sorting-versus-in-memory-aggregation"><span class="nav-number">1.1.1.2.</span> <span class="nav-text">Sorting versus in-memory aggregation</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#The-Unix-Philosophy"><span class="nav-number">1.1.2.</span> <span class="nav-text">The Unix Philosophy</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#A-uniform-interface"><span class="nav-number">1.1.2.1.</span> <span class="nav-text">A uniform interface</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#Separation-of-logic-and-wiring"><span class="nav-number">1.1.2.2.</span> <span class="nav-text">Separation of logic and wiring</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#Transparency-and-experimentation"><span class="nav-number">1.1.2.3.</span> <span class="nav-text">Transparency and experimentation</span></a></li></ol></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#MapReduce-and-Distributed-Filesystems"><span class="nav-number">1.2.</span> <span class="nav-text">MapReduce and Distributed Filesystems</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#MapReduce-Job-Execution"><span class="nav-number">1.2.1.</span> <span class="nav-text">MapReduce Job Execution</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#Distributed-execution-of-MapReduce"><span class="nav-number">1.2.1.1.</span> <span class="nav-text">Distributed execution of MapReduce</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#MapReduce-workflows"><span class="nav-number">1.2.1.2.</span> <span class="nav-text">MapReduce workflows</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Reduce-Side-Joins-and-Grouping"><span class="nav-number">1.2.2.</span> <span class="nav-text">Reduce-Side Joins and Grouping</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#Example-analysis-of-user-activity-events"><span class="nav-number">1.2.2.1.</span> <span class="nav-text">Example: analysis of user activity events</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#Sort-merge-joins"><span class="nav-number">1.2.2.2.</span> <span class="nav-text">Sort-merge joins</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#Bringing-related-data-together-in-the-same-place"><span class="nav-number">1.2.2.3.</span> <span class="nav-text">Bringing related data together in the same place</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#GROUP-BY"><span class="nav-number">1.2.2.4.</span> <span class="nav-text">GROUP BY</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#Handling-skew"><span class="nav-number">1.2.2.5.</span> <span class="nav-text">Handling skew</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Map-Side-Joins"><span class="nav-number">1.2.3.</span> <span class="nav-text">Map-Side Joins</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#Broadcast-hash-joins"><span class="nav-number">1.2.3.1.</span> <span class="nav-text">Broadcast hash joins</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#Partitioned-hash-joins"><span class="nav-number">1.2.3.2.</span> <span class="nav-text">Partitioned hash joins</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#Map-side-merge-joins"><span class="nav-number">1.2.3.3.</span> <span class="nav-text">Map-side merge joins</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#MapReduce-workflows-with-map-side-joins"><span class="nav-number">1.2.3.4.</span> <span class="nav-text">MapReduce workflows with map-side joins</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#The-Output-of-Batch-Workflows"><span class="nav-number">1.2.4.</span> <span class="nav-text">The Output of Batch Workflows</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#Building-search-indexes"><span class="nav-number">1.2.4.1.</span> <span class="nav-text">Building search indexes</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#Key-value-stores-as-batch-process-output"><span class="nav-number">1.2.4.2.</span> <span class="nav-text">Key-value stores as batch process output</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#Philosophy-of-batch-process-outputs"><span class="nav-number">1.2.4.3.</span> <span class="nav-text">Philosophy of batch process outputs</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Comparing-Hadoop-to-Distributed-Databases"><span class="nav-number">1.2.5.</span> <span class="nav-text">Comparing Hadoop to Distributed Databases</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#Diversity-of-storage"><span class="nav-number">1.2.5.1.</span> <span class="nav-text">Diversity of storage</span></a></li></ol></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Beyond-MapReduce"><span class="nav-number">1.3.</span> <span class="nav-text">Beyond MapReduce</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#Materialization-of-Intermediate-State"><span class="nav-number">1.3.1.</span> <span class="nav-text">Materialization of Intermediate State</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#Dataflow-engines"><span class="nav-number">1.3.1.1.</span> <span class="nav-text">Dataflow engines</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#Fault-tolerance"><span class="nav-number">1.3.1.2.</span> <span class="nav-text">Fault tolerance</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#Discussion-of-materialization"><span class="nav-number">1.3.1.3.</span> <span class="nav-text">Discussion of materialization</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Graphs-and-Iterative-Processing"><span class="nav-number">1.3.2.</span> <span class="nav-text">Graphs and Iterative Processing</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#High-Level-APIs-and-Languages"><span class="nav-number">1.3.3.</span> <span class="nav-text">High-Level APIs and Languages</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#The-move-toward-declarative-query-languages"><span class="nav-number">1.3.3.1.</span> <span class="nav-text">The move toward declarative query languages</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#Specialization-for-different-domains"><span class="nav-number">1.3.3.2.</span> <span class="nav-text">Specialization for different domains</span></a></li></ol></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Summary"><span class="nav-number">1.4.</span> <span class="nav-text">Summary</span></a></li></ol></li></ol></div>
+      </section>
+      <!--/noindex-->
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-author animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">Ray Chen</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/blog/archives">
+          <span class="site-state-item-count">10</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-tags">
+        <span class="site-state-item-count">1</span>
+        <span class="site-state-item-name">tags</span>
+      </div>
+  </nav>
+</div>
+
+
+
+      </section>
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </header>
+
+      
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div id="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+
+      <div class="main-inner">
+        
+
+        <div class="content post posts-expand">
+          
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
+    <link itemprop="mainEntityOfPage" href="https://rezelchen.github.io/2020/08/18/DDIA10/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/blog/images/avatar.gif">
+      <meta itemprop="name" content="Ray Chen">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Ray Chen's Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Note for DDIA in Chapter 10
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+
+              <time title="Created: 2020-08-18 18:23:00" itemprop="dateCreated datePublished" datetime="2020-08-18T18:23:00+00:00">2020-08-18</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">Edited on</span>
+                <time title="Modified: 2020-08-20 07:33:40" itemprop="dateModified" datetime="2020-08-20T07:33:40+00:00">2020-08-20</time>
+              </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h2 id="Batch-Processing"><a href="#Batch-Processing" class="headerlink" title="Batch Processing"></a>Batch Processing</h2><p>Let’s distinguish three different types of systems:</p>
+<ul>
+<li>Services (online systems)</li>
+<li>Batch processing systems (offline systems)</li>
+<li>Stream processing systems (near-real-time systems)</li>
+</ul>
+<h3 id="Batch-Processing-with-Unix-Tools"><a href="#Batch-Processing-with-Unix-Tools" class="headerlink" title="Batch Processing with Unix Tools"></a>Batch Processing with Unix Tools</h3><h4 id="Simple-Log-Analysis"><a href="#Simple-Log-Analysis" class="headerlink" title="Simple Log Analysis"></a>Simple Log Analysis</h4><h5 id="Chain-of-commands-versus-custom-program"><a href="#Chain-of-commands-versus-custom-program" class="headerlink" title="Chain of commands versus custom program"></a>Chain of commands versus custom program</h5><h5 id="Sorting-versus-in-memory-aggregation"><a href="#Sorting-versus-in-memory-aggregation" class="headerlink" title="Sorting versus in-memory aggregation"></a>Sorting versus in-memory aggregation</h5><h4 id="The-Unix-Philosophy"><a href="#The-Unix-Philosophy" class="headerlink" title="The Unix Philosophy"></a>The Unix Philosophy</h4><p>The philosophy was described in 1978 as follows:</p>
+<ol>
+<li><p>Make each program do one thing well. </p>
+</li>
+<li><p>Expect the output of every program to become the input to another, as yet unknown, program.</p>
+</li>
+<li><p>Design and build software, even operating systems, to be tried early, ideally within weeks. Don’t hesitate to throw away the clumsy parts and rebuild them.</p>
+</li>
+<li><p>Use tools in preference to unskilled help to lighten a programming task, even if you have to detour to build the tools and expect to throw some of them out after you’ve finished using them.</p>
+</li>
+</ol>
+<h5 id="A-uniform-interface"><a href="#A-uniform-interface" class="headerlink" title="A uniform interface"></a>A uniform interface</h5><p>If you expect the output of one program to become the input to another program, that means those programs must use the same data format -— in other words, a compatible interface. If you want to be able to connect <em>any</em> program’s output to any pro‐ gram’s input, that means that <em>all</em> programs must use the same input/output interface.</p>
+<p>In Unix, that interface is a file (or, more precisely, a file descriptor).</p>
+<p>Today it’s an exception, not the norm, to have programs that work together as smoothly as Unix tools do.</p>
+<h5 id="Separation-of-logic-and-wiring"><a href="#Separation-of-logic-and-wiring" class="headerlink" title="Separation of logic and wiring"></a>Separation of logic and wiring</h5><p>Another characteristic feature of Unix tools is their use of standard input (<code>stdin</code>) and standard output (<code>stdout</code>). </p>
+<p>You can even write your own programs and combine them with the tools provided by the operating system. Your program just needs to read input from <code>stdin</code> and write output to <code>stdout</code>, and it can participate in data processing pipelines. </p>
+<p>However, there are limits to what you can do with <code>stdin</code> and <code>stdout</code>. Programs that need multiple inputs or outputs are possible but tricky.</p>
+<h5 id="Transparency-and-experimentation"><a href="#Transparency-and-experimentation" class="headerlink" title="Transparency and experimentation"></a>Transparency and experimentation</h5><p>Part of what makes Unix tools so successful is that they make it quite easy to see what is going on:</p>
+<ul>
+<li><p>The input files to Unix commands are normally treated as immutable. This means you can run the commands as often as you want, trying various command-line options, without damaging the input files.</p>
+</li>
+<li><p>You can end the pipeline at any point, pipe the output into less, and look at it to see if it has the expected form. This ability to inspect is great for debugging.</p>
+</li>
+<li><p>You can write the output of one pipeline stage to a file and use that file as input to the next stage. This allows you to restart the later stage without rerunning the entire pipeline.</p>
+</li>
+</ul>
+<p>However, the biggest limitation of Unix tools is that they run only on a single machine—and that’s where tools like Hadoop come in.</p>
+<h3 id="MapReduce-and-Distributed-Filesystems"><a href="#MapReduce-and-Distributed-Filesystems" class="headerlink" title="MapReduce and Distributed Filesystems"></a>MapReduce and Distributed Filesystems</h3><p>A single MapReduce job is comparable to a single Unix process: it takes one or more inputs and produces one or more outputs.</p>
+<p>As with most Unix tools, running a MapReduce job normally does not modify the input and does not have any side effects other than producing the output. </p>
+<h4 id="MapReduce-Job-Execution"><a href="#MapReduce-Job-Execution" class="headerlink" title="MapReduce Job Execution"></a>MapReduce Job Execution</h4><p>The pattern of data processing in MapReduce:</p>
+<ol>
+<li><p>Read a set of input files, and break it up into <em>records</em>. </p>
+</li>
+<li><p>Call the mapper function to extract a key and value from each input record. </p>
+</li>
+<li><p>Sort all of the key-value pairs by key.</p>
+</li>
+<li><p>Call the reducer function to iterate over the sorted key-value pairs. If there are multiple occurrences of the same key, the sorting has made them adjacent in the list, so it is easy to combine those values without having to keep a lot of state in memory. </p>
+</li>
+</ol>
+<p>Viewed like this, the role of the mapper is to prepare the data by putting it into a form that is suitable for sorting, and the role of the reducer is to process the data that has been sorted.</p>
+<h5 id="Distributed-execution-of-MapReduce"><a href="#Distributed-execution-of-MapReduce" class="headerlink" title="Distributed execution of MapReduce"></a>Distributed execution of MapReduce</h5><p>The MapReduce scheduler (not shown in the diagram) tries to run each mapper on one of the machines that stores a replica of the input file, provided that machine has enough spare RAM and CPU resources to run the map task. This principle is known as <em>putting the computation near the data</em>: it saves copying the input file over the network, reducing network load and increasing locality.</p>
+<p>The reduce side of the computation is also partitioned. While the number of map tasks is determined by the number of input file blocks, the number of reduce tasks is configured by the job author (it can be different from the number of map tasks).</p>
+<p>The key-value pairs must be sorted, but the dataset is likely too large to be sorted with a conventional sorting algorithm on a single machine. Instead, the sorting is per‐ formed in stages. First, each map task partitions its output by reducer, based on the hash of the key. Each of these partitions is written to a sorted file on the mapper’s local disk, using a technique similar to what we discussed in “SSTables and LSM- Trees” on page 76.</p>
+<p>The process of partitioning by reducer, sorting, and copying data partitions from mappers to reducers is known as the <em>shuffle</em>.</p>
+<p>The reduce task takes the files from the mappers and merges them together, preserv‐ ing the sort order. </p>
+<p>The reducer is called with a key and an iterator that incrementally scans over all records with the same key.</p>
+<h5 id="MapReduce-workflows"><a href="#MapReduce-workflows" class="headerlink" title="MapReduce workflows"></a>MapReduce workflows</h5><p>It is very common for MapReduce jobs to be chained together into workflows, such that the output of one job becomes the input to the next job. </p>
+<p>A batch job’s output is only considered valid when the job has completed successfully. Therefore, one job in a workflow can only start when the prior jobs -— that is, the jobs that produce its input directories —- have completed successfully.</p>
+<p>These schedulers also have management features that are useful when maintaining a large collection of batch jobs.</p>
+<h4 id="Reduce-Side-Joins-and-Grouping"><a href="#Reduce-Side-Joins-and-Grouping" class="headerlink" title="Reduce-Side Joins and Grouping"></a>Reduce-Side Joins and Grouping</h4><p>When we talk about joins in the context of batch processing, we mean resolving all occurrences of some association within a dataset. For example, we assume that a job is processing the data for all users simultaneously, not merely looking up the data for one particular user (which would be done far more efficiently with an index).</p>
+<h5 id="Example-analysis-of-user-activity-events"><a href="#Example-analysis-of-user-activity-events" class="headerlink" title="Example: analysis of user activity events"></a>Example: analysis of user activity events</h5><h5 id="Sort-merge-joins"><a href="#Sort-merge-joins" class="headerlink" title="Sort-merge joins"></a>Sort-merge joins</h5><h5 id="Bringing-related-data-together-in-the-same-place"><a href="#Bringing-related-data-together-in-the-same-place" class="headerlink" title="Bringing related data together in the same place"></a>Bringing related data together in the same place</h5><p>In a sort-merge join, the mappers and the sorting process make sure that all the nec‐ essary data to perform the join operation for a particular user ID is brought together in the same place: a single call to the reducer. </p>
+<p>One way of looking at this architecture is that mappers “send messages” to the reduc‐ ers. When a mapper emits a key-value pair, the key acts like the destination address to which the value should be delivered. Even though the key is just an arbitrary string (not an actual network address like an IP address and port number), it behaves like an address: all key-value pairs with the same key will be delivered to the same destination (a call to the reducer).</p>
+<h5 id="GROUP-BY"><a href="#GROUP-BY" class="headerlink" title="GROUP BY"></a>GROUP BY</h5><h5 id="Handling-skew"><a href="#Handling-skew" class="headerlink" title="Handling skew"></a>Handling skew</h5><p>The pattern of “bringing all records with the same key to the same place” breaks down if there is a very large amount of data related to a single key. </p>
+<p>When performing the actual join, the mappers send any records relating to a hot key to one of several reducers, chosen at random (in contrast to conventional MapReduce, which chooses a reducer deterministically based on a hash of the key). For the other input to the join, records relating to the hot key need to be replicated to all reducers handling that key.</p>
+<h4 id="Map-Side-Joins"><a href="#Map-Side-Joins" class="headerlink" title="Map-Side Joins"></a>Map-Side Joins</h4><p>The join algorithms described in the last section perform the actual join logic in the reducers, and are hence known as reduce-side joins. The mappers take the role of preparing the input data: extracting the key and value from each input record, assigning the key-value pairs to a reducer partition, and sorting by key.</p>
+<h5 id="Broadcast-hash-joins"><a href="#Broadcast-hash-joins" class="headerlink" title="Broadcast hash joins"></a>Broadcast hash joins</h5><p>The simplest way of performing a map-side join applies in the case where a large dataset is joined with a small dataset. In particular, the small dataset needs to be small enough that it can be loaded entirely into memory in each of the mappers.</p>
+<p>This simple but effective algorithm is called a <em>broadcast hash join</em>: the word broadcast reflects the fact that each mapper for a partition of the large input reads the entirety of the small input (so the small input is effectively “broadcast” to all partitions of the large input), and the word hash reflects its use of a hash table. </p>
+<h5 id="Partitioned-hash-joins"><a href="#Partitioned-hash-joins" class="headerlink" title="Partitioned hash joins"></a>Partitioned hash joins</h5><p>If the inputs to the map-side join are partitioned in the same way, then the hash join approach can be applied to each partition independently. </p>
+<p>This approach only works if both of the join’s inputs have the same number of partitions, with records assigned to partitions based on the same key and the same hash function. If the inputs are generated by prior MapReduce jobs that already perform this grouping, then this can be a reasonable assumption to make.</p>
+<h5 id="Map-side-merge-joins"><a href="#Map-side-merge-joins" class="headerlink" title="Map-side merge joins"></a>Map-side merge joins</h5><p>Another variant of a map-side join applies if the input datasets are not only parti‐ tioned in the same way, but also <em>sorted</em> based on the same key. </p>
+<p>If a map-side merge join is possible, it probably means that prior MapReduce jobs brought the input datasets into this partitioned and sorted form in the first place. In principle, this join could have been performed in the reduce stage of the prior job. However, it may still be appropriate to perform the merge join in a separate map- only job, for example if the partitioned and sorted datasets are also needed for other purposes besides this particular join.</p>
+<h5 id="MapReduce-workflows-with-map-side-joins"><a href="#MapReduce-workflows-with-map-side-joins" class="headerlink" title="MapReduce workflows with map-side joins"></a>MapReduce workflows with map-side joins</h5><p>When the output of a MapReduce join is consumed by downstream jobs, the choice of map-side or reduce-side join affects the structure of the output. The output of a reduce-side join is partitioned and sorted by the join key, whereas the output of a map-side join is partitioned and sorted in the same way as the large input.</p>
+<h4 id="The-Output-of-Batch-Workflows"><a href="#The-Output-of-Batch-Workflows" class="headerlink" title="The Output of Batch Workflows"></a>The Output of Batch Workflows</h4><p>The output of a batch process is often not a report, but some other kind of structure.</p>
+<h5 id="Building-search-indexes"><a href="#Building-search-indexes" class="headerlink" title="Building search indexes"></a>Building search indexes</h5><p>If you need to perform a full-text search over a fixed set of documents, then a batch process is a very effective way of building the indexes: the mappers partition the set of documents as needed, each reducer builds the index for its partition, and the index files are written to the distributed filesystem. </p>
+<h5 id="Key-value-stores-as-batch-process-output"><a href="#Key-value-stores-as-batch-process-output" class="headerlink" title="Key-value stores as batch process output"></a>Key-value stores as batch process output</h5><p>Another common use for batch processing is to build machine learning systems such as classifiers (e.g., spam filters, anomaly detection, image recognition) and recommendation systems (e.g., people you may know, products you may be interested in, or related searches).</p>
+<p>A much better solution is to build a brand-new database <em>inside</em> the batch job and write it as files to the job’s output directory in the distributed filesystem, just like the search indexes in the last section. Those data files are then immutable once written, and can be loaded in bulk into servers that handle read-only queries. Various key- value stores support building database files in MapReduce jobs, including Voldemort, Terrapin, ElephantDB, and HBase bulk loading.</p>
+<h5 id="Philosophy-of-batch-process-outputs"><a href="#Philosophy-of-batch-process-outputs" class="headerlink" title="Philosophy of batch process outputs"></a>Philosophy of batch process outputs</h5><h4 id="Comparing-Hadoop-to-Distributed-Databases"><a href="#Comparing-Hadoop-to-Distributed-Databases" class="headerlink" title="Comparing Hadoop to Distributed Databases"></a>Comparing Hadoop to Distributed Databases</h4><h5 id="Diversity-of-storage"><a href="#Diversity-of-storage" class="headerlink" title="Diversity of storage"></a>Diversity of storage</h5><p>…</p>
+<h3 id="Beyond-MapReduce"><a href="#Beyond-MapReduce" class="headerlink" title="Beyond MapReduce"></a>Beyond MapReduce</h3><p>In response to the difficulty of using MapReduce directly, various higher-level pro‐ gramming models (Pig, Hive, Cascading, Crunch) were created as abstractions on top of MapReduce.</p>
+<p>In the rest of this chapter, we will look at some of those alternatives for batch processing. In Chapter 11 we will move to stream processing, which can be regarded as another way of speeding up batch processing.</p>
+<h4 id="Materialization-of-Intermediate-State"><a href="#Materialization-of-Intermediate-State" class="headerlink" title="Materialization of Intermediate State"></a>Materialization of Intermediate State</h4><p>Pipes do not fully materialize the intermediate state, but instead <em>stream</em> the output to the input incrementally, using only a small in-memory buffer.</p>
+<p>MapReduce’s approach of fully materializing intermediate state has downsides com‐ pared to Unix pipes:</p>
+<ul>
+<li><p>A MapReduce job can only start when all tasks in the preceding jobs have completed, whereas processes connected by a Unix pipe are started at the same time, with output being consumed as soon as it is produced.</p>
+</li>
+<li><p>Mappers are often redundant: they just read back the same file that was just writ‐ ten by a reducer, and prepare it for the next stage of partitioning and sorting. </p>
+</li>
+<li><p>Storing intermediate state in a distributed filesystem means those files are repli‐ cated across several nodes, which is often overkill for such temporary data.</p>
+</li>
+</ul>
+<h5 id="Dataflow-engines"><a href="#Dataflow-engines" class="headerlink" title="Dataflow engines"></a>Dataflow engines</h5><p>In order to fix these problems with MapReduce, several new execution engines for distributed batch computations were developed, the most well known of which are Spark, Tez, and Flink. They handle an entire workflow as one job, rather than breaking it up into independent subjobs.</p>
+<p>Since they explicitly model the flow of data through several processing stages, these systems are known as <em>dataflow engines</em>.</p>
+<p>You can use dataflow engines to implement the same computations as MapReduce workflows, and they usually execute significantly faster due to the optimizations described here. </p>
+<h5 id="Fault-tolerance"><a href="#Fault-tolerance" class="headerlink" title="Fault tolerance"></a>Fault tolerance</h5><p>Spark, Flink, and Tez avoid writing intermediate state to HDFS, so they take a different approach to tolerating faults: if a machine fails and the intermediate state on that machine is lost, it is recomputed from other data that is still available (a prior inter‐ mediary stage if possible, or otherwise the original input data, which is normally on HDFS).</p>
+<p>Recovering from faults by recomputing data is not always the right answer: if the intermediate data is much smaller than the source data, or if the computation is very CPU-intensive, it is probably cheaper to materialize the intermediate data to files than to recompute it.</p>
+<h5 id="Discussion-of-materialization"><a href="#Discussion-of-materialization" class="headerlink" title="Discussion of materialization"></a>Discussion of materialization</h5><h4 id="Graphs-and-Iterative-Processing"><a href="#Graphs-and-Iterative-Processing" class="headerlink" title="Graphs and Iterative Processing"></a>Graphs and Iterative Processing</h4><p>…</p>
+<h4 id="High-Level-APIs-and-Languages"><a href="#High-Level-APIs-and-Languages" class="headerlink" title="High-Level APIs and Languages"></a>High-Level APIs and Languages</h4><h5 id="The-move-toward-declarative-query-languages"><a href="#The-move-toward-declarative-query-languages" class="headerlink" title="The move toward declarative query languages"></a>The move toward declarative query languages</h5><p>An advantage of specifying joins as relational operators, compared to spelling out the code that performs the join, is that the framework can analyze the properties of the join inputs and automatically decide which of the aforementioned join algorithms would be most suitable for the task at hand.</p>
+<p>By incorporating declarative aspects in their high-level APIs, and having query opti‐ mizers that can take advantage of them during execution, batch processing frameworks begin to look more like MPP databases (and can achieve comparable performance). At the same time, by having the extensibility of being able to run arbitrary code and read data in arbitrary formats, they retain their flexibility advantage.</p>
+<h5 id="Specialization-for-different-domains"><a href="#Specialization-for-different-domains" class="headerlink" title="Specialization for different domains"></a>Specialization for different domains</h5><p>Also useful are spatial algorithms such as <em>k-nearest neighbors</em>, which searches for items that are close to a given item in some multi-dimensional space—a kind of simi‐ larity search. Approximate search is also important for genome analysis algorithms, which need to find strings that are similar but not identical.</p>
+<h3 id="Summary"><a href="#Summary" class="headerlink" title="Summary"></a>Summary</h3><p>…</p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/blog/tags/note/" rel="tag"># note</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/blog/2020/08/17/DDIA9/" rel="prev" title="Note for DDIA in Chapter 9">
+      <i class="fa fa-chevron-left"></i> Note for DDIA in Chapter 9
+    </a></div>
+      <div class="post-nav-item"></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+        </div>
+        
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Ray Chen</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/muse/" class="theme-link" rel="noopener" target="_blank">NexT.Muse</a>
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/blog/lib/anime.min.js"></script>
+
+<script src="/blog/js/utils.js"></script>
+
+<script src="/blog/js/motion.js"></script>
+
+
+<script src="/blog/js/schemes/muse.js"></script>
+
+
+<script src="/blog/js/next-boot.js"></script>
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>
