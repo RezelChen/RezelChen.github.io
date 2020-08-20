@@ -156,7 +156,7 @@
   <nav class="site-state">
       <div class="site-state-item site-state-posts">
           <a href="/blog/archives">
-          <span class="site-state-item-count">10</span>
+          <span class="site-state-item-count">11</span>
           <span class="site-state-item-name">posts</span>
         </a>
       </div>
@@ -197,6 +197,139 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
+    <link itemprop="mainEntityOfPage" href="https://rezelchen.github.io/2020/08/20/DDIA11/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/blog/images/avatar.gif">
+      <meta itemprop="name" content="Ray Chen">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Ray Chen's Blog">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/blog/2020/08/20/DDIA11/" class="post-title-link" itemprop="url">Note for DDIA in Chapter 11</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+              
+
+              <time title="Created: 2020-08-20 15:34:00 / Modified: 13:31:37" itemprop="dateCreated datePublished" datetime="2020-08-20T15:34:00+00:00">2020-08-20</time>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <h2 id="Stream-Processing"><a href="#Stream-Processing" class="headerlink" title="Stream Processing"></a>Stream Processing</h2><p>In general, a “stream” refers to data that is incrementally made available over time.</p>
+<p>In this chapter we will look at <em>event streams</em> as a data management mechanism: the unbounded, incrementally processed counterpart to the batch data we saw in the last chapter. </p>
+<h3 id="Transmitting-Event-Streams"><a href="#Transmitting-Event-Streams" class="headerlink" title="Transmitting Event Streams"></a>Transmitting Event Streams</h3><p>In batch processing, a file is written once and then potentially read by multiple jobs. Analogously, in streaming terminology, an event is generated once by a producer (also known as a publisher or sender), and then potentially processed by multiple con‐ sumers (subscribers or recipients).</p>
+<h4 id="Messaging-Systems"><a href="#Messaging-Systems" class="headerlink" title="Messaging Systems"></a>Messaging Systems</h4><p>Within this publish/subscribe model, different systems take a wide range of approaches, and there is no one right answer for all purposes. To differentiate the systems, it is particularly helpful to ask the following two questions:</p>
+<ol>
+<li><p><em>What happens if the producers send messages faster than the consumers can process them?</em> Broadly speaking, there are three options: the system can drop messages, buffer messages in a queue, or apply backpressure (also known as flow control; i.e., blocking the producer from sending more messages).</p>
+</li>
+<li><p><em>What happens if nodes crash or temporarily go offline—are any messages lost?</em></p>
+</li>
+</ol>
+<p>Whether message loss is acceptable depends very much on the application. </p>
+<h5 id="Direct-messaging-from-producers-to-consumers"><a href="#Direct-messaging-from-producers-to-consumers" class="headerlink" title="Direct messaging from producers to consumers"></a>Direct messaging from producers to consumers</h5><p>Although these direct messaging systems work well in the situations for which they are designed, they generally require the application code to be aware of the possibility of message loss. The faults they can tolerate are quite limited: even if the protocols detect and retransmit packets that are lost in the network, they generally assume that producers and consumers are constantly online.</p>
+<h5 id="Message-brokers"><a href="#Message-brokers" class="headerlink" title="Message brokers"></a>Message brokers</h5><p>A widely used alternative is to send messages via a <em>message broker</em> (also known as a message queue), which is essentially a kind of database that is optimized for handling message streams.</p>
+<p>A consequence of queueing is also that consumers are generally asynchronous: when a producer sends a message, it normally only waits for the broker to confirm that it has buffered the message and does not wait for the message to be processed by con‐ sumers. The delivery to consumers will happen at some undetermined future point in time—often within a fraction of a second, but sometimes significantly later if there is a queue backlog.</p>
+<h5 id="Message-brokers-compared-to-databases"><a href="#Message-brokers-compared-to-databases" class="headerlink" title="Message brokers compared to databases"></a>Message brokers compared to databases</h5><p>There are still important practical differences between message brokers and databases:</p>
+<ul>
+<li><p>Databases usually keep data until it is explicitly deleted, whereas most message brokers automatically delete a message when it has been successfully delivered to its consumers. </p>
+</li>
+<li><p>Since they quickly delete messages, most message brokers assume that their working set is fairly small–i.e., the queues are short. </p>
+</li>
+<li><p>Databases often support secondary indexes and various ways of searching for data, while message brokers often support some way of subscribing to a subset of topics matching some pattern. The mechanisms are different, but both are essentially ways for a client to select the portion of the data that it wants to know about.</p>
+</li>
+<li><p>Message brokers do not support arbitrary queries, but they do notify clients when data changes.</p>
+</li>
+</ul>
+<h5 id="Multiple-consumers"><a href="#Multiple-consumers" class="headerlink" title="Multiple consumers"></a>Multiple consumers</h5><h5 id="Acknowledgments-and-redelivery"><a href="#Acknowledgments-and-redelivery" class="headerlink" title="Acknowledgments and redelivery"></a>Acknowledgments and redelivery</h5><p>Consumers may crash at any time, so it could happen that a broker delivers a mes‐ sage to a consumer but the consumer never processes it, or only partially processes it before crashing. In order to ensure that the message is not lost, message brokers use acknowledgments: a client must explicitly tell the broker when it has finished processing a message so that the broker can remove it from the queue.</p>
+<h4 id="Partitioned-Logs"><a href="#Partitioned-Logs" class="headerlink" title="Partitioned Logs"></a>Partitioned Logs</h4><p>Why can we not have a hybrid, combining the durable storage approach of databases with the low-latency notification facilities of messaging? This is the idea behind <em>log-based message brokers</em>.</p>
+<h5 id="Using-logs-for-message-storage"><a href="#Using-logs-for-message-storage" class="headerlink" title="Using logs for message storage"></a>Using logs for message storage</h5><h5 id="Logs-compared-to-traditional-messaging"><a href="#Logs-compared-to-traditional-messaging" class="headerlink" title="Logs compared to traditional messaging"></a>Logs compared to traditional messaging</h5><p>The log-based approach trivially supports fan-out messaging, because several consumers can independently read the log without affecting each other—reading a message does not delete it from the log. To achieve load balancing across a group of consumers, instead of assigning individual messages to consumer clients, the broker can assign entire partitions to nodes in the consumer group.</p>
+<p>Each client then consumes <em>all</em> the messages in the partitions it has been assigned. Typically, when a consumer has been assigned a log partition, it reads the messages in the partition sequentially, in a straightforward single-threaded manner.</p>
+<h5 id="Consumer-offsets"><a href="#Consumer-offsets" class="headerlink" title="Consumer offsets"></a>Consumer offsets</h5><p>This offset is in fact very similar to the <em>log sequence number</em> that is commonly found in single-leader database replication.</p>
+<p>If a consumer node fails, another node in the consumer group is assigned the failed consumer’s partitions, and it starts consuming messages at the last recorded offset. If the consumer had processed subsequent messages but not yet recorded their offset, those messages will be processed a second time upon restart. We will discuss ways of dealing with this issue later in the chapter.</p>
+<h5 id="Disk-space-usage"><a href="#Disk-space-usage" class="headerlink" title="Disk space usage"></a>Disk space usage</h5><p>If you only ever append to the log, you will eventually run out of disk space. To reclaim disk space, the log is actually divided into segments, and from time to time old segments are deleted or moved to archive storage.</p>
+<h5 id="When-consumers-cannot-keep-up-with-producers"><a href="#When-consumers-cannot-keep-up-with-producers" class="headerlink" title="When consumers cannot keep up with producers"></a>When consumers cannot keep up with producers</h5><p>Even if a consumer does fall too far behind and starts missing messages, only that consumer is affected; it does not disrupt the service for other consumers. This fact is a big operational advantage: you can experimentally consume a production log for development, testing, or debugging purposes, without having to worry much about disrupting production services. When a consumer is shut down or crashes, it stops consuming resources—the only thing that remains is its consumer offset.</p>
+<h5 id="Replaying-old-messages"><a href="#Replaying-old-messages" class="headerlink" title="Replaying old messages"></a>Replaying old messages</h5><h3 id="Databases-and-Streams"><a href="#Databases-and-Streams" class="headerlink" title="Databases and Streams"></a>Databases and Streams</h3><p>The fact that something was written to a database is an event that can be captured, stored, and processed.</p>
+<p>In fact, a replication log is a stream of database write events, produced by the leader as it processes transactions.</p>
+<p>In this section we will first look at a problem that arises in heterogeneous data sys‐ tems, and then explore how we can solve it by bringing ideas from event streams to databases.</p>
+<h4 id="Keeping-Systems-in-Sync"><a href="#Keeping-Systems-in-Sync" class="headerlink" title="Keeping Systems in Sync"></a>Keeping Systems in Sync</h4><p>As we have seen throughout this book, there is no single system that can satisfy all data storage, querying, and processing needs. In practice, most nontrivial applications need to combine several different technologies in order to satisfy their requirements. Each of these has its own copy of the data, stored in its own representation that is optimized for its own purposes.</p>
+<p>As the same or related data appears in several different places, they need to be kept in sync with one another: if an item is updated in the database, it also needs to be updated in the cache, search indexes, and data warehouse. </p>
+<h4 id="Change-Data-Capture"><a href="#Change-Data-Capture" class="headerlink" title="Change Data Capture"></a>Change Data Capture</h4><h5 id="Implementing-change-data-capture"><a href="#Implementing-change-data-capture" class="headerlink" title="Implementing change data capture"></a>Implementing change data capture</h5><p>Change data capture is a mechanism for ensuring that all changes made to the system of record are also reflected in the derived data systems so that the derived systems have an accurate copy of the data.</p>
+<p>Essentially, change data capture makes one database the leader (the one from which the changes are captured), and turns the others into followers. A log-based message broker is well suited for transporting the change events from the source database, since it preserves the ordering of messages.</p>
+<p>Like message brokers, change data capture is usually asynchronous: the system of record database does not wait for the change to be applied to consumers before committing it. </p>
+<h5 id="Initial-snapshot"><a href="#Initial-snapshot" class="headerlink" title="Initial snapshot"></a>Initial snapshot</h5><p>The snapshot of the database must correspond to a known position or offset in the change log, so that you know at which point to start applying changes after the snapshot has been processed. </p>
+<h5 id="Log-compaction"><a href="#Log-compaction" class="headerlink" title="Log compaction"></a>Log compaction</h5><p>If the CDC system is set up such that every change has a primary key, and every update for a key replaces the previous value for that key, then it’s sufficient to keep just the most recent write for a particular key.</p>
+<p>Now, whenever you want to rebuild a derived data system such as a search index, you can start a new consumer from offset 0 of the log-compacted topic, and sequentially scan over all messages in the log. </p>
+<p>The log is guaranteed to contain the most recent value for every key in the database (and maybe some older values)—in other words, you can use it to obtain a full copy of the database contents without having to take another snapshot of the CDC source database.</p>
+<h5 id="API-support-for-change-streams"><a href="#API-support-for-change-streams" class="headerlink" title="API support for change streams"></a>API support for change streams</h5><h4 id="Event-Sourcing"><a href="#Event-Sourcing" class="headerlink" title="Event Sourcing"></a>Event Sourcing</h4><p>Similarly to change data capture, <em>event sourcing</em> involves storing all changes to the application state as a log of change events. The biggest difference is that event sourc‐ ing applies the idea at a different level of abstraction:</p>
+<ul>
+<li><p>In change data capture, the application uses the database in a mutable way, updating and deleting records at will. The log of changes is extracted from the database at a low leve. The application writing to the database does not need to be aware that CDC is occurring.</p>
+</li>
+<li><p>In event sourcing, the application logic is explicitly built on the basis of immutable events that are written to an event log. In this case, the event store is append- only, and updates or deletes are discouraged or prohibited. Events are designed to reflect things that happened at the application level, rather than low-level state changes.</p>
+</li>
+</ul>
+<p>Event sourcing makes it easier to evolve applications over time, helps with debugging by making it easier to understand after the fact why something happened, and guards against application bugs.</p>
+<h5 id="Deriving-current-state-from-the-event-log"><a href="#Deriving-current-state-from-the-event-log" class="headerlink" title="Deriving current state from the event log"></a>Deriving current state from the event log</h5><h5 id="Commands-and-events"><a href="#Commands-and-events" class="headerlink" title="Commands and events"></a>Commands and events</h5><p>The event sourcing philosophy is careful to distinguish between <em>events</em> and <em>commands</em>. When a request from a user first arrives, it is initially a command: at this point it may still fail, for example because some integrity condition is violated. The application must first validate that it can execute the command. If the validation is successful and the command is accepted, it becomes an event, which is durable and immutable.</p>
+<p>At the point when the event is generated, it becomes a <em>fact</em>.</p>
+<p>A consumer of the event stream is not allowed to reject an event: by the time the consumer sees the event, it is already an immutable part of the log, and it may have already been seen by other consumers. </p>
+<h4 id="State-Streams-and-Immutability"><a href="#State-Streams-and-Immutability" class="headerlink" title="State, Streams, and Immutability"></a>State, Streams, and Immutability</h4><p>We normally think of databases as storing the current state of the application—this representation is optimized for reads, and it is usually the most convenient for serving queries. </p>
+<p>The key idea is that mutable state and an append-only log of immutable events do not contradict each other: they are two sides of the same coin. The log of all changes, the changelog, represents the evolution of state over time.</p>
+<p> If you consider the log of events to be your system of record, and any mutable state as being derived from it, it becomes easier to reason about the flow of data through a system.</p>
+<p> Log compaction, as discussed in “Log compaction” on page 456, is one way of bridging the distinction between log and database state: it retains only the latest version of each record, and discards overwritten versions.</p>
+<h5 id="Advantages-of-immutable-events"><a href="#Advantages-of-immutable-events" class="headerlink" title="Advantages of immutable events"></a>Advantages of immutable events</h5><p>If a mistake is made, accountants don’t erase or change the incorrect transaction in the ledger—instead, they add another transaction that compensates for the mistake, for example refunding an incorrect charge. </p>
+<p>Immutable events also capture more information than just the current state. </p>
+<h5 id="Deriving-several-views-from-the-same-event-log"><a href="#Deriving-several-views-from-the-same-event-log" class="headerlink" title="Deriving several views from the same event log"></a>Deriving several views from the same event log</h5><p>…</p>
+<h3 id="Processing-Streams"><a href="#Processing-Streams" class="headerlink" title="Processing Streams"></a>Processing Streams</h3><p>What remains is to discuss what you can do with the stream once you have it— namely, you can process it. Broadly, there are three options:</p>
+<ol>
+<li><p>You can take the data in the events and write it to a database, cache, search index, or similar storage system, from where it can then be queried by other clients. </p>
+</li>
+<li><p>You can push the events to users in some way, for example by sending email alerts or push notifications, or by streaming the events to a real-time dashboard where they are visualized. In this case, a human is the ultimate consumer of the stream.</p>
+</li>
+<li><p>You can process one or more input streams to produce one or more output streams. </p>
+</li>
+</ol>
+<p>In the rest of this chapter, we will discuss option 3: processing streams to produce other, derived streams. A piece of code that processes streams like this is known as an <em>operator</em> or a <em>job</em>. </p>
+<p>The one crucial difference to batch jobs is that a stream never ends. This difference has many implications: as discussed at the start of this chapter, sorting does not make sense with an unbounded dataset, and so sort-merge joins cannot be used. </p>
+<h4 id="Uses-of-Stream-Processing"><a href="#Uses-of-Stream-Processing" class="headerlink" title="Uses of Stream Processing"></a>Uses of Stream Processing</h4><p>…</p>
+
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
     <link itemprop="mainEntityOfPage" href="https://rezelchen.github.io/2020/08/18/DDIA10/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -228,7 +361,7 @@
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">Edited on</span>
-                <time title="Modified: 2020-08-20 07:33:40" itemprop="dateModified" datetime="2020-08-20T07:33:40+00:00">2020-08-20</time>
+                <time title="Modified: 2020-08-20 13:31:37" itemprop="dateModified" datetime="2020-08-20T13:31:37+00:00">2020-08-20</time>
               </span>
 
           
@@ -388,7 +521,7 @@
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">Edited on</span>
-                <time title="Modified: 2020-08-20 07:33:40" itemprop="dateModified" datetime="2020-08-20T07:33:40+00:00">2020-08-20</time>
+                <time title="Modified: 2020-08-20 13:31:37" itemprop="dateModified" datetime="2020-08-20T13:31:37+00:00">2020-08-20</time>
               </span>
 
           
@@ -626,7 +759,7 @@
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">Edited on</span>
-                <time title="Modified: 2020-08-20 07:33:40" itemprop="dateModified" datetime="2020-08-20T07:33:40+00:00">2020-08-20</time>
+                <time title="Modified: 2020-08-20 13:31:37" itemprop="dateModified" datetime="2020-08-20T13:31:37+00:00">2020-08-20</time>
               </span>
 
           
@@ -753,7 +886,7 @@
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">Edited on</span>
-                <time title="Modified: 2020-08-20 07:33:40" itemprop="dateModified" datetime="2020-08-20T07:33:40+00:00">2020-08-20</time>
+                <time title="Modified: 2020-08-20 13:31:37" itemprop="dateModified" datetime="2020-08-20T13:31:37+00:00">2020-08-20</time>
               </span>
 
           
@@ -1029,7 +1162,7 @@
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">Edited on</span>
-                <time title="Modified: 2020-08-20 07:33:40" itemprop="dateModified" datetime="2020-08-20T07:33:40+00:00">2020-08-20</time>
+                <time title="Modified: 2020-08-20 13:31:37" itemprop="dateModified" datetime="2020-08-20T13:31:37+00:00">2020-08-20</time>
               </span>
 
           
@@ -1151,7 +1284,7 @@
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">Edited on</span>
-                <time title="Modified: 2020-08-20 07:33:40" itemprop="dateModified" datetime="2020-08-20T07:33:40+00:00">2020-08-20</time>
+                <time title="Modified: 2020-08-20 13:31:37" itemprop="dateModified" datetime="2020-08-20T13:31:37+00:00">2020-08-20</time>
               </span>
 
           
@@ -1358,7 +1491,7 @@
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">Edited on</span>
-                <time title="Modified: 2020-08-20 07:33:40" itemprop="dateModified" datetime="2020-08-20T07:33:40+00:00">2020-08-20</time>
+                <time title="Modified: 2020-08-20 13:31:37" itemprop="dateModified" datetime="2020-08-20T13:31:37+00:00">2020-08-20</time>
               </span>
 
           
@@ -1471,7 +1604,7 @@
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">Edited on</span>
-                <time title="Modified: 2020-08-20 07:33:40" itemprop="dateModified" datetime="2020-08-20T07:33:40+00:00">2020-08-20</time>
+                <time title="Modified: 2020-08-20 13:31:37" itemprop="dateModified" datetime="2020-08-20T13:31:37+00:00">2020-08-20</time>
               </span>
 
           
@@ -1603,7 +1736,7 @@
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">Edited on</span>
-                <time title="Modified: 2020-08-20 07:33:40" itemprop="dateModified" datetime="2020-08-20T07:33:40+00:00">2020-08-20</time>
+                <time title="Modified: 2020-08-20 13:31:37" itemprop="dateModified" datetime="2020-08-20T13:31:37+00:00">2020-08-20</time>
               </span>
 
           
@@ -1657,89 +1790,11 @@
   
   
 
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
-    <link itemprop="mainEntityOfPage" href="https://rezelchen.github.io/2020/05/27/DDIA1/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/blog/images/avatar.gif">
-      <meta itemprop="name" content="Ray Chen">
-      <meta itemprop="description" content="">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Ray Chen's Blog">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/blog/2020/05/27/DDIA1/" class="post-title-link" itemprop="url">Note for DDIA in Chapter 1</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-calendar"></i>
-              </span>
-              <span class="post-meta-item-text">Posted on</span>
-
-              <time title="Created: 2020-05-27 22:54:40" itemprop="dateCreated datePublished" datetime="2020-05-27T22:54:40+00:00">2020-05-27</time>
-            </span>
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="far fa-calendar-check"></i>
-                </span>
-                <span class="post-meta-item-text">Edited on</span>
-                <time title="Modified: 2020-08-20 07:33:40" itemprop="dateModified" datetime="2020-08-20T07:33:40+00:00">2020-08-20</time>
-              </span>
-
-          
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <h3 id="Reliability"><a href="#Reliability" class="headerlink" title="Reliability"></a>Reliability</h3><ul>
-<li>The application performs the function that the user expected.</li>
-<li>It can tolerate the user making mistakes or using the software in unexpected ways.</li>
-<li>Its performance is good enough for the required use case, under the expected load and data volume.</li>
-<li>The system prevents any unauthorized access and abuse.</li>
-</ul>
-<h3 id="Scalability"><a href="#Scalability" class="headerlink" title="Scalability"></a>Scalability</h3><h4 id="Describing-Load"><a href="#Describing-Load" class="headerlink" title="Describing Load"></a>Describing Load</h4><p>Load can be described with a few numbers which we call <em>load parameters</em>. The best choice of parameters depends on the architecture of your system: it may be requests per second to a web server, the ratio of reads to writes in a database, the number of simultaneously active users in a chat room, the hit rate on a cache, or something else. Perhaps the average case is what matters for you, or perhaps your bottleneck is dominated by a small number of extreme cases.</p>
-<h4 id="Describing-Performance"><a href="#Describing-Performance" class="headerlink" title="Describing Performance"></a>Describing Performance</h4><ul>
-<li>throughput — the number of records we can process per second</li>
-<li>the total time it takes to run a job on a dataset of a certain size</li>
-<li>response time — the time between a client sending a request and receiving a response</li>
-<li>latency is the duration that a request is waiting to be handled—during which it is <em>latent</em>, awaiting service</li>
-</ul>
-<p>High percentiles of response times, also known as <em>tail latencies</em>, are important because they directly affect users’ experience of the service.</p>
-<h4 id="Approaches-for-Coping-with-Load"><a href="#Approaches-for-Coping-with-Load" class="headerlink" title="Approaches for Coping with Load"></a>Approaches for Coping with Load</h4><p>While distributing stateless services across multiple machines is fairly straightfor‐ ward, taking stateful data systems from a single node to a distributed setup can intro‐ duce a lot of additional complexity.</p>
-<p>An architecture that scales well for a particular application is built around assumptions of which operations will be common and which will be rare — the load parameters.</p>
-<p>Even though they are specific to a particular application, scalable architectures are nevertheless usually built from general-purpose building blocks, arranged in familiar patterns.</p>
-<h3 id="Maintainability"><a href="#Maintainability" class="headerlink" title="Maintainability"></a>Maintainability</h3><h4 id="Operability-Making-Life-Easy-for-Operations"><a href="#Operability-Making-Life-Easy-for-Operations" class="headerlink" title="Operability: Making Life Easy for Operations"></a>Operability: Making Life Easy for Operations</h4><h4 id="Simplicity-Managing-Complexity"><a href="#Simplicity-Managing-Complexity" class="headerlink" title="Simplicity: Managing Complexity"></a>Simplicity: Managing Complexity</h4><h4 id="Evolvability-Making-Change-Easy"><a href="#Evolvability-Making-Change-Easy" class="headerlink" title="Evolvability: Making Change Easy"></a>Evolvability: Making Change Easy</h4>
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
 
   
+  <nav class="pagination">
+    <span class="page-number current">1</span><a class="page-number" href="/blog/page/2/">2</a><a class="extend next" rel="next" href="/blog/page/2/"><i class="fa fa-angle-right" aria-label="Next page"></i></a>
+  </nav>
 
 
 
