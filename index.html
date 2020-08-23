@@ -156,7 +156,7 @@
   <nav class="site-state">
       <div class="site-state-item site-state-posts">
           <a href="/blog/archives">
-          <span class="site-state-item-count">11</span>
+          <span class="site-state-item-count">12</span>
           <span class="site-state-item-name">posts</span>
         </a>
       </div>
@@ -197,6 +197,159 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
+    <link itemprop="mainEntityOfPage" href="https://rezelchen.github.io/2020/08/21/DDIA12/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/blog/images/avatar.gif">
+      <meta itemprop="name" content="Ray Chen">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Ray Chen's Blog">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/blog/2020/08/21/DDIA12/" class="post-title-link" itemprop="url">Note for DDIA in Chapter 12</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+
+              <time title="Created: 2020-08-21 12:11:00" itemprop="dateCreated datePublished" datetime="2020-08-21T12:11:00+00:00">2020-08-21</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">Edited on</span>
+                <time title="Modified: 2020-08-23 07:07:26" itemprop="dateModified" datetime="2020-08-23T07:07:26+00:00">2020-08-23</time>
+              </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <h2 id="The-Future-of-Data-Systems"><a href="#The-Future-of-Data-Systems" class="headerlink" title="The Future of Data Systems"></a>The Future of Data Systems</h2><h3 id="Data-Integration"><a href="#Data-Integration" class="headerlink" title="Data Integration"></a>Data Integration</h3><p>There is unlikely to be one piece of software that is suitable for all the different circumstances in which the data is used, so you inevitably end up having to cobble together several different pieces of software in order to provide your application’s functionality.</p>
+<h4 id="Combining-Specialized-Tools-by-Deriving-Data"><a href="#Combining-Specialized-Tools-by-Deriving-Data" class="headerlink" title="Combining Specialized Tools by Deriving Data"></a>Combining Specialized Tools by Deriving Data</h4><p>The need for data integration often only becomes apparent if you zoom out and consider the dataflows across an entire organization.</p>
+<h5 id="Reasoning-about-dataflows"><a href="#Reasoning-about-dataflows" class="headerlink" title="Reasoning about dataflows"></a>Reasoning about dataflows</h5><p>If it is possible for you to funnel all user input through a single system that decides on an ordering for all writes, it becomes much easier to derive other representations of the data by processing the writes in the same order. This is an application of the state machine replication approach that we saw in “Total Order Broadcast” on page 348. Whether you use change data capture or an event sourcing log is less important than simply the principle of deciding on a total order.</p>
+<h5 id="Derived-data-versus-distributed-transactions"><a href="#Derived-data-versus-distributed-transactions" class="headerlink" title="Derived data versus distributed transactions"></a>Derived data versus distributed transactions</h5><p>Distributed transactions decide on an ordering of writes by using locks for mutual exclusion, while CDC and event sourcing use a log for ordering. Distributed transactions use atomic commit to ensure that changes take effect exactly once, while log-based systems are often based on deterministic retry and idempotence.</p>
+<p>The biggest difference is that transaction systems usually provide linearizability, which implies useful guarantees such as reading your own writes. On the other hand, derived data systems are often updated asynchronously, and so they do not by default offer the same timing guarantees.</p>
+<p>In the absence of widespread support for a good distributed transaction protocol, I believe that log-based derived data is the most promising approach for integrating different data systems. </p>
+<h5 id="The-limits-of-total-ordering"><a href="#The-limits-of-total-ordering" class="headerlink" title="The limits of total ordering"></a>The limits of total ordering</h5><p>As systems are scaled toward bigger and more complex workloads, limitations begin to emerge:</p>
+<ul>
+<li><p>In most cases, constructing a totally ordered log requires all events to pass through a single leader node that decides on the ordering. If the throughput of events is greater than a single machine can handle, you need to partition it across multiple machines. The order of events in two different partitions is then ambiguous.</p>
+</li>
+<li><p>If the servers are spread across multiple <em>geographically distributed</em> datacenters. This implies an undefined ordering of events that originate in two different datacenters.</p>
+</li>
+<li><p>When applications are deployed as <em>microservices</em>, a common design choice is to deploy each service and its durable state as an independent unit, with no durable state shared between services. When two events originate in different services, there is no defined order for those events.</p>
+</li>
+<li><p>Some applications maintain client-side state that is updated immediately on user input. With such applications, clients and servers are very likely to see events in different orders.</p>
+</li>
+</ul>
+<p>In formal terms, deciding on a total order of events is known as <em>total order broadcast</em>, which is equivalent to consensus. Most consensus algorithms are designed for situations in which the throughput of a single node is sufficient to process the entire stream of events, and these algorithms do not provide a mechanism for multiple nodes to share the work of ordering the events. </p>
+<h5 id="Ordering-events-to-capture-causality"><a href="#Ordering-events-to-capture-causality" class="headerlink" title="Ordering events to capture causality"></a>Ordering events to capture causality</h5><p>…</p>
+<h4 id="Batch-and-Stream-Processing"><a href="#Batch-and-Stream-Processing" class="headerlink" title="Batch and Stream Processing"></a>Batch and Stream Processing</h4><p>Batch and stream processing have a lot of principles in common, and the main fundamental difference is that stream process‐ ors operate on unbounded datasets whereas batch process inputs are of a known, finite size. There are also many detailed differences in the ways the processing engines are implemented, but these distinctions are beginning to blur.</p>
+<h5 id="Maintaining-derived-state"><a href="#Maintaining-derived-state" class="headerlink" title="Maintaining derived state"></a>Maintaining derived state</h5><h5 id="Reprocessing-data-for-application-evolution"><a href="#Reprocessing-data-for-application-evolution" class="headerlink" title="Reprocessing data for application evolution"></a>Reprocessing data for application evolution</h5><p>In particular, reprocessing existing data provides a good mechanism for maintaining a system, evolving it to support new features and changed requirements. On the other hand, with reprocessing it is possible to restructure a dataset into a completely different model in order to better serve new requirements.</p>
+<p>Derived views allow <em>gradual</em> evolution. </p>
+<p>The beauty of such a gradual migration is that every stage of the process is easily reversible if something goes wrong: you always have a working system to go back to. By reducing the risk of irreversible damage, you can be more confident about going ahead, and thus move faster to improve your system.</p>
+<h5 id="The-lambda-architecture"><a href="#The-lambda-architecture" class="headerlink" title="The lambda architecture"></a>The lambda architecture</h5><p>The lambda architecture proposes running two different systems in parallel: a batch processing system such as Hadoop MapReduce, and a separate stream- processing system such as Storm.</p>
+<p>In the lambda approach, the stream processor consumes the events and quickly produces an approximate update to the view; the batch processor later consumes the <em>same</em> set of events and produces a corrected version of the derived view. </p>
+<p>It has a number of practical problems:</p>
+<ul>
+<li><p>Having to maintain the same logic to run both in a batch and in a stream pro‐ cessing framework is significant additional effort. </p>
+</li>
+<li><p>Since the stream pipeline and the batch pipeline produce separate outputs, they need to be merged in order to respond to user requests.</p>
+</li>
+<li><p>Although it is great to have the ability to reprocess the entire historical dataset, doing so frequently is expensive on large datasets. </p>
+</li>
+</ul>
+<h5 id="Unifying-batch-and-stream-processing"><a href="#Unifying-batch-and-stream-processing" class="headerlink" title="Unifying batch and stream processing"></a>Unifying batch and stream processing</h5><p>More recent work has enabled the benefits of the lambda architecture to be enjoyed without its downsides, by allowing both batch computations (reprocessing historical data) and stream computations (processing events as they arrive) to be implemented in the same system.</p>
+<p>Unifying batch and stream processing in one system requires the following features, which are becoming increasingly widely available:</p>
+<ul>
+<li><p>The ability to replay historical events through the same processing engine that handles the stream of recent events.</p>
+</li>
+<li><p>Exactly-once semantics for stream processors—that is, ensuring that the output is the same as if no faults had occurred, even if faults did in fact occur. Like with batch processing, this requires discarding the partial output of any failed tasks.</p>
+</li>
+<li><p>Tools for windowing by event time, not by processing time, since processing time is meaningless when reprocessing historical events.</p>
+</li>
+</ul>
+<h3 id="Unbundling-Databases"><a href="#Unbundling-Databases" class="headerlink" title="Unbundling Databases"></a>Unbundling Databases</h3><h4 id="Composing-Data-Storage-Technologies"><a href="#Composing-Data-Storage-Technologies" class="headerlink" title="Composing Data Storage Technologies"></a>Composing Data Storage Technologies</h4><h5 id="Creating-an-index"><a href="#Creating-an-index" class="headerlink" title="Creating an index"></a>Creating an index</h5><h5 id="The-meta-database-of-everything"><a href="#The-meta-database-of-everything" class="headerlink" title="The meta-database of everything"></a>The meta-database of everything</h5><p>In this light, I think that the dataflow across an entire organization starts looking like one huge database. </p>
+<p>Where will these developments take us in the future? If we start from the premise that there is no single data model or storage format that is suitable for all access pat‐ terns, I speculate that there are two avenues by which different storage and process‐ ing tools can nevertheless be composed into a cohesive system:</p>
+<p><em>Federated databases: unifying reads</em></p>
+<ul>
+<li>It is possible to provide a unified query interface to a wide variety of underlying storage engines and processing methods—an approach known as a <em>federated database</em> or <em>polystore</em>.</li>
+</ul>
+<p><em>Unbundled databases: unifying writes</em></p>
+<ul>
+<li>While federation addresses read-only querying across several different systems, it does not have a good answer to synchronizing writes across those systems. Making it easier to reliably plug together storage systems (e.g., through change data capture and event logs) is like <em>unbundling</em> a database’s index-maintenance features in a way that can synchronize writes across disparate technologies</li>
+</ul>
+<h5 id="Making-unbundling-work"><a href="#Making-unbundling-work" class="headerlink" title="Making unbundling work"></a>Making unbundling work</h5><p>Federation and unbundling are two sides of the same coin: composing a reliable, scalable, and maintainable system out of diverse components.</p>
+<p>Transactions within a single storage or stream processing system are feasible, but when data crosses the boundary between different technologies, I believe that an asynchronous event log with idempotent writes is a much more robust and practical approach.</p>
+<p>An ordered log of events with idempotent consumers (see “Idempotence” on page 478) is a much simpler abstrac‐ tion, and thus much more feasible to implement across heterogeneous systems.</p>
+<p>The big advantage of log-based integration is <em>loose coupling</em> between the various components, which manifests itself in two ways:</p>
+<ol>
+<li><p>At a system level, asynchronous event streams make the system as a whole more robust to outages or performance degradation of individual components. If a consumer runs slow or fails, the event log can buffer messages, allowing the producer and any other consumers to continue running unaffected.</p>
+</li>
+<li><p>At a human level, unbundling data systems allows different software components and services to be developed, improved, and maintained independently from each other by different teams. Specialization allows each team to focus on doing one thing well, with well-defined interfaces to other teams’ systems. Event logs provide an interface that is powerful enough to capture fairly strong consistency properties (due to durability and ordering of events), but also general enough to be applicable to almost any kind of data.</p>
+</li>
+</ol>
+<h5 id="Unbundled-versus-integrated-systems"><a href="#Unbundled-versus-integrated-systems" class="headerlink" title="Unbundled versus integrated systems"></a>Unbundled versus integrated systems</h5><p>…</p>
+<h5 id="What’s-missing"><a href="#What’s-missing" class="headerlink" title="What’s missing?"></a>What’s missing?</h5><p>The tools for composing data systems are getting better, but I think one major part is missing: we don’t yet have the unbundled-database equivalent of the Unix shell (i.e., a high-level language for composing storage and processing systems in a simple and declarative way).</p>
+<p>Similarly, it would be great to be able to precompute and update caches more easily.</p>
+<h4 id="Designing-Applications-Around-Dataflow"><a href="#Designing-Applications-Around-Dataflow" class="headerlink" title="Designing Applications Around Dataflow"></a>Designing Applications Around Dataflow</h4><h5 id="Application-code-as-a-derivation-function"><a href="#Application-code-as-a-derivation-function" class="headerlink" title="Application code as a derivation function"></a>Application code as a derivation function</h5><h5 id="Separation-of-application-code-and-state"><a href="#Separation-of-application-code-and-state" class="headerlink" title="Separation of application code and state"></a>Separation of application code and state</h5><p>I think it makes sense to have some parts of a system that specialize in durable data storage, and other parts that specialize in running application code. The two can interact while still remaining independent.</p>
+<p>Most web applications today are deployed as stateless services, in which any user request can be routed to any application server, and the server forgets everything about the request once it has sent the response. </p>
+<p>In this typical web application model, the database acts as a kind of mutable shared variable that can be accessed synchronously over the network. </p>
+<p>However, in most programming languages you cannot subscribe to changes in a mutable variable—you can only read it periodically. </p>
+<h5 id="Dataflow-Interplay-between-state-changes-and-application-code"><a href="#Dataflow-Interplay-between-state-changes-and-application-code" class="headerlink" title="Dataflow: Interplay between state changes and application code"></a>Dataflow: Interplay between state changes and application code</h5><p>Thinking about applications in terms of dataflow implies renegotiating the relation‐ ship between application code and state management. Instead of treating a database as a passive variable that is manipulated by the application, we think much more about the interplay and collaboration between state, state changes, and code that processes them. Application code responds to state changes in one place by triggering state changes in another place.</p>
+<p>Unbundling the database means taking this idea and applying it to the creation of derived datasets outside of the primary database: caches, full-text search indexes, machine learning, or analytics systems. We can use stream processing and messaging systems for this purpose.</p>
+<ul>
+<li><p>When maintaining derived data, the order of state changes is often important (if several views are derived from an event log, they need to process the events in the same order so that they remain consistent with each other).</p>
+</li>
+<li><p>Fault tolerance is key for derived data: losing just a single message causes the derived dataset to go permanently out of sync with its data source. Both message delivery and derived state updates must be reliable.</p>
+</li>
+</ul>
+<p>Stable message ordering and fault-tolerant message processing are quite stringent demands, but they are much less expensive and more operationally robust than dis‐ tributed transactions. </p>
+<h5 id="Stream-processors-and-services"><a href="#Stream-processors-and-services" class="headerlink" title="Stream processors and services"></a>Stream processors and services</h5><p>Composing stream operators into dataflow systems has a lot of similar characteristics to the microservices approach. However, the underlying communication mecha‐ nism is very different: one-directional, asynchronous message streams rather than synchronous request/response interactions.</p>
+<ul>
+<li><p>In the microservices approach, the code that processes the purchase would prob‐ ably query an exchange-rate service or database in order to obtain the current rate for a particular currency.</p>
+</li>
+<li><p>In the dataflow approach, the code that processes purchases would subscribe to a stream of exchange rate updates ahead of time, and record the current rate in a local database whenever it changes. When it comes to processing the purchase, it only needs to query the local database.</p>
+</li>
+</ul>
+<p>Subscribing to a stream of changes, rather than querying the current state when needed, brings us closer to a spreadsheet-like model of computation: when some piece of data changes, any derived data that depends on it can swiftly be updated.</p>
+<h4 id="Observing-Derived-State"><a href="#Observing-Derived-State" class="headerlink" title="Observing Derived State"></a>Observing Derived State</h4><p>…</p>
+
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
     <link itemprop="mainEntityOfPage" href="https://rezelchen.github.io/2020/08/20/DDIA11/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -220,10 +373,16 @@
                 <i class="far fa-calendar"></i>
               </span>
               <span class="post-meta-item-text">Posted on</span>
-              
 
-              <time title="Created: 2020-08-20 15:34:00 / Modified: 13:31:37" itemprop="dateCreated datePublished" datetime="2020-08-20T15:34:00+00:00">2020-08-20</time>
+              <time title="Created: 2020-08-20 15:34:00" itemprop="dateCreated datePublished" datetime="2020-08-20T15:34:00+00:00">2020-08-20</time>
             </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">Edited on</span>
+                <time title="Modified: 2020-08-23 07:07:26" itemprop="dateModified" datetime="2020-08-23T07:07:26+00:00">2020-08-23</time>
+              </span>
 
           
 
@@ -361,7 +520,7 @@
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">Edited on</span>
-                <time title="Modified: 2020-08-20 13:31:37" itemprop="dateModified" datetime="2020-08-20T13:31:37+00:00">2020-08-20</time>
+                <time title="Modified: 2020-08-23 07:07:26" itemprop="dateModified" datetime="2020-08-23T07:07:26+00:00">2020-08-23</time>
               </span>
 
           
@@ -521,7 +680,7 @@
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">Edited on</span>
-                <time title="Modified: 2020-08-20 13:31:37" itemprop="dateModified" datetime="2020-08-20T13:31:37+00:00">2020-08-20</time>
+                <time title="Modified: 2020-08-23 07:07:26" itemprop="dateModified" datetime="2020-08-23T07:07:26+00:00">2020-08-23</time>
               </span>
 
           
@@ -649,7 +808,7 @@
 <h5 id="A-system-of-promises"><a href="#A-system-of-promises" class="headerlink" title="A system of promises"></a>A system of promises</h5><p>Thus, the protocol contains two crucial “points of no return”: when a participant votes “yes,” it promises that it will definitely be able to commit later (although the coordinator may still choose to abort); and once the coordinator decides, that deci‐ sion is irrevocable. Those promises ensure the atomicity of 2PC.</p>
 <h5 id="Coordinator-failure"><a href="#Coordinator-failure" class="headerlink" title="Coordinator failure"></a>Coordinator failure</h5><p>We have discussed what happens if one of the participants or the network fails during 2PC: if any of the prepare requests fail or time out, the coordinator aborts the trans‐ action; if any of the commit or abort requests fail, the coordinator retries them indefi‐ nitely. </p>
 <h5 id="Three-phase-commit"><a href="#Three-phase-commit" class="headerlink" title="Three-phase commit"></a>Three-phase commit</h5><p>Two-phase commit is called a <em>blocking</em> atomic commit protocol due to the fact that 2PC can become stuck waiting for the coordinator to recover. In theory, it is possible to make an atomic commit protocol <em>nonblocking</em>, so that it does not get stuck if a node fails. However, making this work in practice is not so straightforward.</p>
-<h4 id="Distributed-Transactions-in-Practice"><a href="#Distributed-Transactions-in-Practice" class="headerlink" title="Distributed Transactions in Practice"></a>Distributed Transactions in Practice</h4><h5 id="Exactly-once-message-processing"><a href="#Exactly-once-message-processing" class="headerlink" title="Exactly-once message processing"></a>Exactly-once message processing</h5><h5 id="XA-transactions"><a href="#XA-transactions" class="headerlink" title="XA transactions"></a>XA transactions</h5><p><em>X/Open XA</em> (short for eXtended Architecture) is a standard for implementing two- phase commit across heterogeneous technologies.</p>
+<h4 id="Distributed-Transactions-in-Practice"><a href="#Distributed-Transactions-in-Practice" class="headerlink" title="Distributed Transactions in Practice"></a>Distributed Transactions in Practice</h4><h5 id="Exactly-once-message-processing"><a href="#Exactly-once-message-processing" class="headerlink" title="Exactly-once message processing"></a>Exactly-once message processing</h5><h5 id="XA-transactions"><a href="#XA-transactions" class="headerlink" title="XA transactions"></a>XA transactions</h5><p><em>X/Open XA</em> (short for eXtended Architecture) is a standard for implementing two-phase commit across heterogeneous technologies.</p>
 <h5 id="Holding-locks-while-in-doubt"><a href="#Holding-locks-while-in-doubt" class="headerlink" title="Holding locks while in doubt"></a>Holding locks while in doubt</h5><h5 id="Recovering-from-coordinator-failure"><a href="#Recovering-from-coordinator-failure" class="headerlink" title="Recovering from coordinator failure"></a>Recovering from coordinator failure</h5><p>Many XA implementations have an emergency escape hatch called <em>heuristic decisions</em>: allowing a participant to unilaterally decide to abort or commit an in-doubt transaction without a definitive decision from the coordinator. To be clear, <em>heuristic</em> here is a euphemism for <em>probably breaking atomicity</em>, since it violates the system of promises in two-phase commit. </p>
 <h5 id="Limitations-of-distributed-transactions"><a href="#Limitations-of-distributed-transactions" class="headerlink" title="Limitations of distributed transactions"></a>Limitations of distributed transactions</h5><p>XA transactions solve the real and important problem of keeping several participant data systems consistent with each other, but as we have seen, they also introduce major operational problems. In particular, the key realization is that the transaction coordinator is itself a kind of database (in which transaction outcomes are stored), and so it needs to be approached with the same care as any other important database:</p>
 <ul>
@@ -759,7 +918,7 @@
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">Edited on</span>
-                <time title="Modified: 2020-08-20 13:31:37" itemprop="dateModified" datetime="2020-08-20T13:31:37+00:00">2020-08-20</time>
+                <time title="Modified: 2020-08-23 07:07:26" itemprop="dateModified" datetime="2020-08-23T07:07:26+00:00">2020-08-23</time>
               </span>
 
           
@@ -886,7 +1045,7 @@
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">Edited on</span>
-                <time title="Modified: 2020-08-20 13:31:37" itemprop="dateModified" datetime="2020-08-20T13:31:37+00:00">2020-08-20</time>
+                <time title="Modified: 2020-08-23 07:07:26" itemprop="dateModified" datetime="2020-08-23T07:07:26+00:00">2020-08-23</time>
               </span>
 
           
@@ -1162,7 +1321,7 @@
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">Edited on</span>
-                <time title="Modified: 2020-08-20 13:31:37" itemprop="dateModified" datetime="2020-08-20T13:31:37+00:00">2020-08-20</time>
+                <time title="Modified: 2020-08-23 07:07:26" itemprop="dateModified" datetime="2020-08-23T07:07:26+00:00">2020-08-23</time>
               </span>
 
           
@@ -1284,7 +1443,7 @@
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">Edited on</span>
-                <time title="Modified: 2020-08-20 13:31:37" itemprop="dateModified" datetime="2020-08-20T13:31:37+00:00">2020-08-20</time>
+                <time title="Modified: 2020-08-23 07:07:26" itemprop="dateModified" datetime="2020-08-23T07:07:26+00:00">2020-08-23</time>
               </span>
 
           
@@ -1491,7 +1650,7 @@
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">Edited on</span>
-                <time title="Modified: 2020-08-20 13:31:37" itemprop="dateModified" datetime="2020-08-20T13:31:37+00:00">2020-08-20</time>
+                <time title="Modified: 2020-08-23 07:07:26" itemprop="dateModified" datetime="2020-08-23T07:07:26+00:00">2020-08-23</time>
               </span>
 
           
@@ -1604,7 +1763,7 @@
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">Edited on</span>
-                <time title="Modified: 2020-08-20 13:31:37" itemprop="dateModified" datetime="2020-08-20T13:31:37+00:00">2020-08-20</time>
+                <time title="Modified: 2020-08-23 07:07:26" itemprop="dateModified" datetime="2020-08-23T07:07:26+00:00">2020-08-23</time>
               </span>
 
           
@@ -1686,95 +1845,6 @@
 <h4 id="Data-Warehousing"><a href="#Data-Warehousing" class="headerlink" title="Data Warehousing"></a>Data Warehousing</h4><p>The data warehouse con‐ tains a read-only copy of the data in all the various OLTP systems in the company. Data is extracted from OLTP databases (using either a periodic data dump or a con‐ tinuous stream of updates), transformed into an analysis-friendly schema, cleaned up, and then loaded into the data warehouse. This process of getting data into the warehouse is known as Extract–Transform–Load (ETL)</p>
 <h5 id="The-divergence-between-OLTP-databases-and-data-warehouses"><a href="#The-divergence-between-OLTP-databases-and-data-warehouses" class="headerlink" title="The divergence between OLTP databases and data warehouses"></a>The divergence between OLTP databases and data warehouses</h5><h4 id="Stars-and-Snowflakes-Schemas-for-Analytics"><a href="#Stars-and-Snowflakes-Schemas-for-Analytics" class="headerlink" title="Stars and Snowflakes: Schemas for Analytics"></a>Stars and Snowflakes: Schemas for Analytics</h4><p>…</p>
 <h3 id="Column-Oriented-Storage"><a href="#Column-Oriented-Storage" class="headerlink" title="Column-Oriented Storage"></a>Column-Oriented Storage</h3><p>…</p>
-
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
-    <link itemprop="mainEntityOfPage" href="https://rezelchen.github.io/2020/07/24/DDIA2/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/blog/images/avatar.gif">
-      <meta itemprop="name" content="Ray Chen">
-      <meta itemprop="description" content="">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Ray Chen's Blog">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/blog/2020/07/24/DDIA2/" class="post-title-link" itemprop="url">Note for DDIA in Chapter 2</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-calendar"></i>
-              </span>
-              <span class="post-meta-item-text">Posted on</span>
-
-              <time title="Created: 2020-07-24 18:54:40" itemprop="dateCreated datePublished" datetime="2020-07-24T18:54:40+00:00">2020-07-24</time>
-            </span>
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="far fa-calendar-check"></i>
-                </span>
-                <span class="post-meta-item-text">Edited on</span>
-                <time title="Modified: 2020-08-20 13:31:37" itemprop="dateModified" datetime="2020-08-20T13:31:37+00:00">2020-08-20</time>
-              </span>
-
-          
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <h2 id="Data-Models-and-Query-Languages"><a href="#Data-Models-and-Query-Languages" class="headerlink" title="Data Models and Query Languages"></a>Data Models and Query Languages</h2><h3 id="Relational-Model-Versus-Document-Model"><a href="#Relational-Model-Versus-Document-Model" class="headerlink" title="Relational Model Versus Document Model"></a>Relational Model Versus Document Model</h3><h4 id="Many-to-One-and-Many-to-Many-Relationships"><a href="#Many-to-One-and-Many-to-Many-Relationships" class="headerlink" title="Many-to-One and Many-to-Many Relationships"></a>Many-to-One and Many-to-Many Relationships</h4><p>Removing such duplication is the key idea behind <em>normalization</em> in databases.</p>
-<p>As a rule of thumb, if you’re duplicating values that could be stored in just one place, the schema is not normalized.</p>
-<h4 id="Are-Document-Databases-Repeating-History"><a href="#Are-Document-Databases-Repeating-History" class="headerlink" title="Are Document Databases Repeating History?"></a>Are Document Databases Repeating History?</h4><h5 id="The-network-model"><a href="#The-network-model" class="headerlink" title="The network model"></a>The network model</h5><h5 id="The-relational-model"><a href="#The-relational-model" class="headerlink" title="The relational model"></a>The relational model</h5><h5 id="Comparison-to-document-databases"><a href="#Comparison-to-document-databases" class="headerlink" title="Comparison to document databases"></a>Comparison to document databases</h5><h4 id="Relational-Versus-Document-Databases-Today"><a href="#Relational-Versus-Document-Databases-Today" class="headerlink" title="Relational Versus Document Databases Today"></a>Relational Versus Document Databases Today</h4><h5 id="Which-data-model-leads-to-simpler-application-code"><a href="#Which-data-model-leads-to-simpler-application-code" class="headerlink" title="Which data model leads to simpler application code?"></a>Which data model leads to simpler application code?</h5><h5 id="Schema-flexibility-in-the-document-model"><a href="#Schema-flexibility-in-the-document-model" class="headerlink" title="Schema flexibility in the document model"></a>Schema flexibility in the document model</h5><p>A more accurate term is schema-on-read (the structure of the data is implicit, and only interpreted when the data is read), in contrast with schema-on-write (the traditional approach of relational databases, where the schema is explicit and the database ensures all written data conforms to it)</p>
-<h5 id="Data-locality-for-queries"><a href="#Data-locality-for-queries" class="headerlink" title="Data locality for queries"></a>Data locality for queries</h5><h5 id="Convergence-of-document-and-relational-databases"><a href="#Convergence-of-document-and-relational-databases" class="headerlink" title="Convergence of document and relational databases"></a>Convergence of document and relational databases</h5><p>A hybrid of the relational and document models is a good route for databases to take in the future.</p>
-<h3 id="Query-Languages-for-Data"><a href="#Query-Languages-for-Data" class="headerlink" title="Query Languages for Data"></a>Query Languages for Data</h3><p>A declarative query language is attractive because it is typically more concise and eas‐ ier to work with than an imperative API. But more importantly, it also hides imple‐ mentation details of the database engine, which makes it possible for the database system to introduce performance improvements without requiring any changes to queries.</p>
-<h4 id="Declarative-Queries-on-the-Web"><a href="#Declarative-Queries-on-the-Web" class="headerlink" title="Declarative Queries on the Web"></a>Declarative Queries on the Web</h4><h4 id="MapReduce-Querying"><a href="#MapReduce-Querying" class="headerlink" title="MapReduce Querying"></a>MapReduce Querying</h4><p>MapReduce is a fairly low-level programming model for distributed execution on a cluster of machines. Higher-level query languages like SQL can be implemented as a pipeline of MapReduce operations but there are also many dis‐ tributed implementations of SQL that don’t use MapReduce.</p>
-<p>Note there is nothing in SQL that constrains it to running on a single machine, and MapReduce doesn’t have a monopoly on distributed query execution.</p>
-<h3 id="Graph-Like-Data-Models"><a href="#Graph-Like-Data-Models" class="headerlink" title="Graph-Like Data Models"></a>Graph-Like Data Models</h3><p>In the examples just given, all the vertices in a graph represent the same kind of thing (people, web pages, or road junctions, respectively). However, graphs are not limited to such homogeneous data: an equally powerful use of graphs is to provide a consis‐ tent way of storing completely different types of objects in a single datastore.</p>
-<h4 id="Property-Graphs"><a href="#Property-Graphs" class="headerlink" title="Property Graphs"></a>Property Graphs</h4><p>properties of vertex:</p>
-<ul>
-<li>A unique identifier</li>
-<li>A set of outgoing edges</li>
-<li>A set of incoming edges</li>
-<li>A collection of properties (key-value pairs)</li>
-</ul>
-<p>properties of edge:</p>
-<ul>
-<li>A unique identifier</li>
-<li>The vertex at which the edge starts (the tail vertex)</li>
-<li>The vertex at which the edge ends (the head vertex)</li>
-<li>A label to describe the kind of relationship between the two vertices</li>
-<li>A collection of properties (key-value pairs)</li>
-</ul>
-<p>You can think of a graph store as consisting of two relational tables, one for vertices and one for edges</p>
-<h4 id="The-Cypher-Query-Language"><a href="#The-Cypher-Query-Language" class="headerlink" title="The Cypher Query Language"></a>The Cypher Query Language</h4><p>…</p>
 
       
     </div>

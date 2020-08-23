@@ -30,7 +30,7 @@
 <meta property="og:description" content="Consistency and ConsensusThe best way of building fault-tolerant systems is to find some general-purpose abstractions with useful guarantees, implement them once, and then let applications rely on tho">
 <meta property="og:locale" content="en_US">
 <meta property="article:published_time" content="2020-08-17T23:39:00.000Z">
-<meta property="article:modified_time" content="2020-08-20T13:31:37.214Z">
+<meta property="article:modified_time" content="2020-08-23T07:07:26.100Z">
 <meta property="article:author" content="Ray Chen">
 <meta property="article:tag" content="note">
 <meta name="twitter:card" content="summary">
@@ -162,7 +162,7 @@
   <nav class="site-state">
       <div class="site-state-item site-state-posts">
           <a href="/blog/archives">
-          <span class="site-state-item-count">11</span>
+          <span class="site-state-item-count">12</span>
           <span class="site-state-item-name">posts</span>
         </a>
       </div>
@@ -234,7 +234,7 @@
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">Edited on</span>
-                <time title="Modified: 2020-08-20 13:31:37" itemprop="dateModified" datetime="2020-08-20T13:31:37+00:00">2020-08-20</time>
+                <time title="Modified: 2020-08-23 07:07:26" itemprop="dateModified" datetime="2020-08-23T07:07:26+00:00">2020-08-23</time>
               </span>
 
           
@@ -362,7 +362,7 @@
 <h5 id="A-system-of-promises"><a href="#A-system-of-promises" class="headerlink" title="A system of promises"></a>A system of promises</h5><p>Thus, the protocol contains two crucial “points of no return”: when a participant votes “yes,” it promises that it will definitely be able to commit later (although the coordinator may still choose to abort); and once the coordinator decides, that deci‐ sion is irrevocable. Those promises ensure the atomicity of 2PC.</p>
 <h5 id="Coordinator-failure"><a href="#Coordinator-failure" class="headerlink" title="Coordinator failure"></a>Coordinator failure</h5><p>We have discussed what happens if one of the participants or the network fails during 2PC: if any of the prepare requests fail or time out, the coordinator aborts the trans‐ action; if any of the commit or abort requests fail, the coordinator retries them indefi‐ nitely. </p>
 <h5 id="Three-phase-commit"><a href="#Three-phase-commit" class="headerlink" title="Three-phase commit"></a>Three-phase commit</h5><p>Two-phase commit is called a <em>blocking</em> atomic commit protocol due to the fact that 2PC can become stuck waiting for the coordinator to recover. In theory, it is possible to make an atomic commit protocol <em>nonblocking</em>, so that it does not get stuck if a node fails. However, making this work in practice is not so straightforward.</p>
-<h4 id="Distributed-Transactions-in-Practice"><a href="#Distributed-Transactions-in-Practice" class="headerlink" title="Distributed Transactions in Practice"></a>Distributed Transactions in Practice</h4><h5 id="Exactly-once-message-processing"><a href="#Exactly-once-message-processing" class="headerlink" title="Exactly-once message processing"></a>Exactly-once message processing</h5><h5 id="XA-transactions"><a href="#XA-transactions" class="headerlink" title="XA transactions"></a>XA transactions</h5><p><em>X/Open XA</em> (short for eXtended Architecture) is a standard for implementing two- phase commit across heterogeneous technologies.</p>
+<h4 id="Distributed-Transactions-in-Practice"><a href="#Distributed-Transactions-in-Practice" class="headerlink" title="Distributed Transactions in Practice"></a>Distributed Transactions in Practice</h4><h5 id="Exactly-once-message-processing"><a href="#Exactly-once-message-processing" class="headerlink" title="Exactly-once message processing"></a>Exactly-once message processing</h5><h5 id="XA-transactions"><a href="#XA-transactions" class="headerlink" title="XA transactions"></a>XA transactions</h5><p><em>X/Open XA</em> (short for eXtended Architecture) is a standard for implementing two-phase commit across heterogeneous technologies.</p>
 <h5 id="Holding-locks-while-in-doubt"><a href="#Holding-locks-while-in-doubt" class="headerlink" title="Holding locks while in doubt"></a>Holding locks while in doubt</h5><h5 id="Recovering-from-coordinator-failure"><a href="#Recovering-from-coordinator-failure" class="headerlink" title="Recovering from coordinator failure"></a>Recovering from coordinator failure</h5><p>Many XA implementations have an emergency escape hatch called <em>heuristic decisions</em>: allowing a participant to unilaterally decide to abort or commit an in-doubt transaction without a definitive decision from the coordinator. To be clear, <em>heuristic</em> here is a euphemism for <em>probably breaking atomicity</em>, since it violates the system of promises in two-phase commit. </p>
 <h5 id="Limitations-of-distributed-transactions"><a href="#Limitations-of-distributed-transactions" class="headerlink" title="Limitations of distributed transactions"></a>Limitations of distributed transactions</h5><p>XA transactions solve the real and important problem of keeping several participant data systems consistent with each other, but as we have seen, they also introduce major operational problems. In particular, the key realization is that the transaction coordinator is itself a kind of database (in which transaction outcomes are stored), and so it needs to be approached with the same care as any other important database:</p>
 <ul>

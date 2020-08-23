@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 4.2.1">
+  <link rel="apple-touch-icon" sizes="180x180" href="/blog/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/blog/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/blog/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/blog/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/blog/css/main.css">
+
+
+<link rel="stylesheet" href="/blog/lib/font-awesome/css/all.min.css">
+  
+  <link rel="stylesheet" href="/blog/lib/animate-css/animate.min.css">
+
+<script class="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"rezelchen.github.io","root":"/blog/","scheme":"Muse","version":"8.0.0-rc.4","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12},"copycode":false,"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}}};
+  </script>
+
+  <meta name="description" content="The Future of Data SystemsData IntegrationThere is unlikely to be one piece of software that is suitable for all the different circumstances in which the data is used, so you inevitably end up having">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Note for DDIA in Chapter 12">
+<meta property="og:url" content="https://rezelchen.github.io/2020/08/21/DDIA12/index.html">
+<meta property="og:site_name" content="Ray Chen&#39;s Blog">
+<meta property="og:description" content="The Future of Data SystemsData IntegrationThere is unlikely to be one piece of software that is suitable for all the different circumstances in which the data is used, so you inevitably end up having">
+<meta property="og:locale" content="en_US">
+<meta property="article:published_time" content="2020-08-21T12:11:00.000Z">
+<meta property="article:modified_time" content="2020-08-23T07:07:26.100Z">
+<meta property="article:author" content="Ray Chen">
+<meta property="article:tag" content="note">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="https://rezelchen.github.io/2020/08/21/DDIA12/">
+
+
+<script class="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'en'
+  };
+</script>
+
+  <title>Note for DDIA in Chapter 12 | Ray Chen's Blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  body { margin-top: 2rem; }
+
+  .use-motion .menu-item,
+  .use-motion .sidebar,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header {
+    visibility: visible;
+  }
+
+  .use-motion .header,
+  .use-motion .site-brand-container .toggle,
+  .use-motion .footer { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle,
+  .use-motion .custom-logo-image {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line {
+    transform: scaleX(1);
+  }
+
+  .search-pop-overlay, .sidebar-nav { display: none; }
+  .sidebar-panel { display: block; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <main class="main">
+      <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+        <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/blog/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <h1 class="site-title">Ray Chen's Blog</h1>
+      <i class="logo-line"></i>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+
+
+
+</div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <section class="post-toc-wrap sidebar-panel">
+          <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#The-Future-of-Data-Systems"><span class="nav-number">1.</span> <span class="nav-text">The Future of Data Systems</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Data-Integration"><span class="nav-number">1.1.</span> <span class="nav-text">Data Integration</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#Combining-Specialized-Tools-by-Deriving-Data"><span class="nav-number">1.1.1.</span> <span class="nav-text">Combining Specialized Tools by Deriving Data</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#Reasoning-about-dataflows"><span class="nav-number">1.1.1.1.</span> <span class="nav-text">Reasoning about dataflows</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#Derived-data-versus-distributed-transactions"><span class="nav-number">1.1.1.2.</span> <span class="nav-text">Derived data versus distributed transactions</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#The-limits-of-total-ordering"><span class="nav-number">1.1.1.3.</span> <span class="nav-text">The limits of total ordering</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#Ordering-events-to-capture-causality"><span class="nav-number">1.1.1.4.</span> <span class="nav-text">Ordering events to capture causality</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Batch-and-Stream-Processing"><span class="nav-number">1.1.2.</span> <span class="nav-text">Batch and Stream Processing</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#Maintaining-derived-state"><span class="nav-number">1.1.2.1.</span> <span class="nav-text">Maintaining derived state</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#Reprocessing-data-for-application-evolution"><span class="nav-number">1.1.2.2.</span> <span class="nav-text">Reprocessing data for application evolution</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#The-lambda-architecture"><span class="nav-number">1.1.2.3.</span> <span class="nav-text">The lambda architecture</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#Unifying-batch-and-stream-processing"><span class="nav-number">1.1.2.4.</span> <span class="nav-text">Unifying batch and stream processing</span></a></li></ol></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Unbundling-Databases"><span class="nav-number">1.2.</span> <span class="nav-text">Unbundling Databases</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#Composing-Data-Storage-Technologies"><span class="nav-number">1.2.1.</span> <span class="nav-text">Composing Data Storage Technologies</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#Creating-an-index"><span class="nav-number">1.2.1.1.</span> <span class="nav-text">Creating an index</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#The-meta-database-of-everything"><span class="nav-number">1.2.1.2.</span> <span class="nav-text">The meta-database of everything</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#Making-unbundling-work"><span class="nav-number">1.2.1.3.</span> <span class="nav-text">Making unbundling work</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#Unbundled-versus-integrated-systems"><span class="nav-number">1.2.1.4.</span> <span class="nav-text">Unbundled versus integrated systems</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#What’s-missing"><span class="nav-number">1.2.1.5.</span> <span class="nav-text">What’s missing?</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Designing-Applications-Around-Dataflow"><span class="nav-number">1.2.2.</span> <span class="nav-text">Designing Applications Around Dataflow</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#Application-code-as-a-derivation-function"><span class="nav-number">1.2.2.1.</span> <span class="nav-text">Application code as a derivation function</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#Separation-of-application-code-and-state"><span class="nav-number">1.2.2.2.</span> <span class="nav-text">Separation of application code and state</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#Dataflow-Interplay-between-state-changes-and-application-code"><span class="nav-number">1.2.2.3.</span> <span class="nav-text">Dataflow: Interplay between state changes and application code</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#Stream-processors-and-services"><span class="nav-number">1.2.2.4.</span> <span class="nav-text">Stream processors and services</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Observing-Derived-State"><span class="nav-number">1.2.3.</span> <span class="nav-text">Observing Derived State</span></a></li></ol></li></ol></li></ol></div>
+      </section>
+      <!--/noindex-->
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-author animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">Ray Chen</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/blog/archives">
+          <span class="site-state-item-count">12</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-tags">
+        <span class="site-state-item-count">1</span>
+        <span class="site-state-item-name">tags</span>
+      </div>
+  </nav>
+</div>
+
+
+
+      </section>
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </header>
+
+      
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div id="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+
+      <div class="main-inner">
+        
+
+        <div class="content post posts-expand">
+          
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
+    <link itemprop="mainEntityOfPage" href="https://rezelchen.github.io/2020/08/21/DDIA12/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/blog/images/avatar.gif">
+      <meta itemprop="name" content="Ray Chen">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Ray Chen's Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Note for DDIA in Chapter 12
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+
+              <time title="Created: 2020-08-21 12:11:00" itemprop="dateCreated datePublished" datetime="2020-08-21T12:11:00+00:00">2020-08-21</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">Edited on</span>
+                <time title="Modified: 2020-08-23 07:07:26" itemprop="dateModified" datetime="2020-08-23T07:07:26+00:00">2020-08-23</time>
+              </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h2 id="The-Future-of-Data-Systems"><a href="#The-Future-of-Data-Systems" class="headerlink" title="The Future of Data Systems"></a>The Future of Data Systems</h2><h3 id="Data-Integration"><a href="#Data-Integration" class="headerlink" title="Data Integration"></a>Data Integration</h3><p>There is unlikely to be one piece of software that is suitable for all the different circumstances in which the data is used, so you inevitably end up having to cobble together several different pieces of software in order to provide your application’s functionality.</p>
+<h4 id="Combining-Specialized-Tools-by-Deriving-Data"><a href="#Combining-Specialized-Tools-by-Deriving-Data" class="headerlink" title="Combining Specialized Tools by Deriving Data"></a>Combining Specialized Tools by Deriving Data</h4><p>The need for data integration often only becomes apparent if you zoom out and consider the dataflows across an entire organization.</p>
+<h5 id="Reasoning-about-dataflows"><a href="#Reasoning-about-dataflows" class="headerlink" title="Reasoning about dataflows"></a>Reasoning about dataflows</h5><p>If it is possible for you to funnel all user input through a single system that decides on an ordering for all writes, it becomes much easier to derive other representations of the data by processing the writes in the same order. This is an application of the state machine replication approach that we saw in “Total Order Broadcast” on page 348. Whether you use change data capture or an event sourcing log is less important than simply the principle of deciding on a total order.</p>
+<h5 id="Derived-data-versus-distributed-transactions"><a href="#Derived-data-versus-distributed-transactions" class="headerlink" title="Derived data versus distributed transactions"></a>Derived data versus distributed transactions</h5><p>Distributed transactions decide on an ordering of writes by using locks for mutual exclusion, while CDC and event sourcing use a log for ordering. Distributed transactions use atomic commit to ensure that changes take effect exactly once, while log-based systems are often based on deterministic retry and idempotence.</p>
+<p>The biggest difference is that transaction systems usually provide linearizability, which implies useful guarantees such as reading your own writes. On the other hand, derived data systems are often updated asynchronously, and so they do not by default offer the same timing guarantees.</p>
+<p>In the absence of widespread support for a good distributed transaction protocol, I believe that log-based derived data is the most promising approach for integrating different data systems. </p>
+<h5 id="The-limits-of-total-ordering"><a href="#The-limits-of-total-ordering" class="headerlink" title="The limits of total ordering"></a>The limits of total ordering</h5><p>As systems are scaled toward bigger and more complex workloads, limitations begin to emerge:</p>
+<ul>
+<li><p>In most cases, constructing a totally ordered log requires all events to pass through a single leader node that decides on the ordering. If the throughput of events is greater than a single machine can handle, you need to partition it across multiple machines. The order of events in two different partitions is then ambiguous.</p>
+</li>
+<li><p>If the servers are spread across multiple <em>geographically distributed</em> datacenters. This implies an undefined ordering of events that originate in two different datacenters.</p>
+</li>
+<li><p>When applications are deployed as <em>microservices</em>, a common design choice is to deploy each service and its durable state as an independent unit, with no durable state shared between services. When two events originate in different services, there is no defined order for those events.</p>
+</li>
+<li><p>Some applications maintain client-side state that is updated immediately on user input. With such applications, clients and servers are very likely to see events in different orders.</p>
+</li>
+</ul>
+<p>In formal terms, deciding on a total order of events is known as <em>total order broadcast</em>, which is equivalent to consensus. Most consensus algorithms are designed for situations in which the throughput of a single node is sufficient to process the entire stream of events, and these algorithms do not provide a mechanism for multiple nodes to share the work of ordering the events. </p>
+<h5 id="Ordering-events-to-capture-causality"><a href="#Ordering-events-to-capture-causality" class="headerlink" title="Ordering events to capture causality"></a>Ordering events to capture causality</h5><p>…</p>
+<h4 id="Batch-and-Stream-Processing"><a href="#Batch-and-Stream-Processing" class="headerlink" title="Batch and Stream Processing"></a>Batch and Stream Processing</h4><p>Batch and stream processing have a lot of principles in common, and the main fundamental difference is that stream process‐ ors operate on unbounded datasets whereas batch process inputs are of a known, finite size. There are also many detailed differences in the ways the processing engines are implemented, but these distinctions are beginning to blur.</p>
+<h5 id="Maintaining-derived-state"><a href="#Maintaining-derived-state" class="headerlink" title="Maintaining derived state"></a>Maintaining derived state</h5><h5 id="Reprocessing-data-for-application-evolution"><a href="#Reprocessing-data-for-application-evolution" class="headerlink" title="Reprocessing data for application evolution"></a>Reprocessing data for application evolution</h5><p>In particular, reprocessing existing data provides a good mechanism for maintaining a system, evolving it to support new features and changed requirements. On the other hand, with reprocessing it is possible to restructure a dataset into a completely different model in order to better serve new requirements.</p>
+<p>Derived views allow <em>gradual</em> evolution. </p>
+<p>The beauty of such a gradual migration is that every stage of the process is easily reversible if something goes wrong: you always have a working system to go back to. By reducing the risk of irreversible damage, you can be more confident about going ahead, and thus move faster to improve your system.</p>
+<h5 id="The-lambda-architecture"><a href="#The-lambda-architecture" class="headerlink" title="The lambda architecture"></a>The lambda architecture</h5><p>The lambda architecture proposes running two different systems in parallel: a batch processing system such as Hadoop MapReduce, and a separate stream- processing system such as Storm.</p>
+<p>In the lambda approach, the stream processor consumes the events and quickly produces an approximate update to the view; the batch processor later consumes the <em>same</em> set of events and produces a corrected version of the derived view. </p>
+<p>It has a number of practical problems:</p>
+<ul>
+<li><p>Having to maintain the same logic to run both in a batch and in a stream pro‐ cessing framework is significant additional effort. </p>
+</li>
+<li><p>Since the stream pipeline and the batch pipeline produce separate outputs, they need to be merged in order to respond to user requests.</p>
+</li>
+<li><p>Although it is great to have the ability to reprocess the entire historical dataset, doing so frequently is expensive on large datasets. </p>
+</li>
+</ul>
+<h5 id="Unifying-batch-and-stream-processing"><a href="#Unifying-batch-and-stream-processing" class="headerlink" title="Unifying batch and stream processing"></a>Unifying batch and stream processing</h5><p>More recent work has enabled the benefits of the lambda architecture to be enjoyed without its downsides, by allowing both batch computations (reprocessing historical data) and stream computations (processing events as they arrive) to be implemented in the same system.</p>
+<p>Unifying batch and stream processing in one system requires the following features, which are becoming increasingly widely available:</p>
+<ul>
+<li><p>The ability to replay historical events through the same processing engine that handles the stream of recent events.</p>
+</li>
+<li><p>Exactly-once semantics for stream processors—that is, ensuring that the output is the same as if no faults had occurred, even if faults did in fact occur. Like with batch processing, this requires discarding the partial output of any failed tasks.</p>
+</li>
+<li><p>Tools for windowing by event time, not by processing time, since processing time is meaningless when reprocessing historical events.</p>
+</li>
+</ul>
+<h3 id="Unbundling-Databases"><a href="#Unbundling-Databases" class="headerlink" title="Unbundling Databases"></a>Unbundling Databases</h3><h4 id="Composing-Data-Storage-Technologies"><a href="#Composing-Data-Storage-Technologies" class="headerlink" title="Composing Data Storage Technologies"></a>Composing Data Storage Technologies</h4><h5 id="Creating-an-index"><a href="#Creating-an-index" class="headerlink" title="Creating an index"></a>Creating an index</h5><h5 id="The-meta-database-of-everything"><a href="#The-meta-database-of-everything" class="headerlink" title="The meta-database of everything"></a>The meta-database of everything</h5><p>In this light, I think that the dataflow across an entire organization starts looking like one huge database. </p>
+<p>Where will these developments take us in the future? If we start from the premise that there is no single data model or storage format that is suitable for all access pat‐ terns, I speculate that there are two avenues by which different storage and process‐ ing tools can nevertheless be composed into a cohesive system:</p>
+<p><em>Federated databases: unifying reads</em></p>
+<ul>
+<li>It is possible to provide a unified query interface to a wide variety of underlying storage engines and processing methods—an approach known as a <em>federated database</em> or <em>polystore</em>.</li>
+</ul>
+<p><em>Unbundled databases: unifying writes</em></p>
+<ul>
+<li>While federation addresses read-only querying across several different systems, it does not have a good answer to synchronizing writes across those systems. Making it easier to reliably plug together storage systems (e.g., through change data capture and event logs) is like <em>unbundling</em> a database’s index-maintenance features in a way that can synchronize writes across disparate technologies</li>
+</ul>
+<h5 id="Making-unbundling-work"><a href="#Making-unbundling-work" class="headerlink" title="Making unbundling work"></a>Making unbundling work</h5><p>Federation and unbundling are two sides of the same coin: composing a reliable, scalable, and maintainable system out of diverse components.</p>
+<p>Transactions within a single storage or stream processing system are feasible, but when data crosses the boundary between different technologies, I believe that an asynchronous event log with idempotent writes is a much more robust and practical approach.</p>
+<p>An ordered log of events with idempotent consumers (see “Idempotence” on page 478) is a much simpler abstrac‐ tion, and thus much more feasible to implement across heterogeneous systems.</p>
+<p>The big advantage of log-based integration is <em>loose coupling</em> between the various components, which manifests itself in two ways:</p>
+<ol>
+<li><p>At a system level, asynchronous event streams make the system as a whole more robust to outages or performance degradation of individual components. If a consumer runs slow or fails, the event log can buffer messages, allowing the producer and any other consumers to continue running unaffected.</p>
+</li>
+<li><p>At a human level, unbundling data systems allows different software components and services to be developed, improved, and maintained independently from each other by different teams. Specialization allows each team to focus on doing one thing well, with well-defined interfaces to other teams’ systems. Event logs provide an interface that is powerful enough to capture fairly strong consistency properties (due to durability and ordering of events), but also general enough to be applicable to almost any kind of data.</p>
+</li>
+</ol>
+<h5 id="Unbundled-versus-integrated-systems"><a href="#Unbundled-versus-integrated-systems" class="headerlink" title="Unbundled versus integrated systems"></a>Unbundled versus integrated systems</h5><p>…</p>
+<h5 id="What’s-missing"><a href="#What’s-missing" class="headerlink" title="What’s missing?"></a>What’s missing?</h5><p>The tools for composing data systems are getting better, but I think one major part is missing: we don’t yet have the unbundled-database equivalent of the Unix shell (i.e., a high-level language for composing storage and processing systems in a simple and declarative way).</p>
+<p>Similarly, it would be great to be able to precompute and update caches more easily.</p>
+<h4 id="Designing-Applications-Around-Dataflow"><a href="#Designing-Applications-Around-Dataflow" class="headerlink" title="Designing Applications Around Dataflow"></a>Designing Applications Around Dataflow</h4><h5 id="Application-code-as-a-derivation-function"><a href="#Application-code-as-a-derivation-function" class="headerlink" title="Application code as a derivation function"></a>Application code as a derivation function</h5><h5 id="Separation-of-application-code-and-state"><a href="#Separation-of-application-code-and-state" class="headerlink" title="Separation of application code and state"></a>Separation of application code and state</h5><p>I think it makes sense to have some parts of a system that specialize in durable data storage, and other parts that specialize in running application code. The two can interact while still remaining independent.</p>
+<p>Most web applications today are deployed as stateless services, in which any user request can be routed to any application server, and the server forgets everything about the request once it has sent the response. </p>
+<p>In this typical web application model, the database acts as a kind of mutable shared variable that can be accessed synchronously over the network. </p>
+<p>However, in most programming languages you cannot subscribe to changes in a mutable variable—you can only read it periodically. </p>
+<h5 id="Dataflow-Interplay-between-state-changes-and-application-code"><a href="#Dataflow-Interplay-between-state-changes-and-application-code" class="headerlink" title="Dataflow: Interplay between state changes and application code"></a>Dataflow: Interplay between state changes and application code</h5><p>Thinking about applications in terms of dataflow implies renegotiating the relation‐ ship between application code and state management. Instead of treating a database as a passive variable that is manipulated by the application, we think much more about the interplay and collaboration between state, state changes, and code that processes them. Application code responds to state changes in one place by triggering state changes in another place.</p>
+<p>Unbundling the database means taking this idea and applying it to the creation of derived datasets outside of the primary database: caches, full-text search indexes, machine learning, or analytics systems. We can use stream processing and messaging systems for this purpose.</p>
+<ul>
+<li><p>When maintaining derived data, the order of state changes is often important (if several views are derived from an event log, they need to process the events in the same order so that they remain consistent with each other).</p>
+</li>
+<li><p>Fault tolerance is key for derived data: losing just a single message causes the derived dataset to go permanently out of sync with its data source. Both message delivery and derived state updates must be reliable.</p>
+</li>
+</ul>
+<p>Stable message ordering and fault-tolerant message processing are quite stringent demands, but they are much less expensive and more operationally robust than dis‐ tributed transactions. </p>
+<h5 id="Stream-processors-and-services"><a href="#Stream-processors-and-services" class="headerlink" title="Stream processors and services"></a>Stream processors and services</h5><p>Composing stream operators into dataflow systems has a lot of similar characteristics to the microservices approach. However, the underlying communication mecha‐ nism is very different: one-directional, asynchronous message streams rather than synchronous request/response interactions.</p>
+<ul>
+<li><p>In the microservices approach, the code that processes the purchase would prob‐ ably query an exchange-rate service or database in order to obtain the current rate for a particular currency.</p>
+</li>
+<li><p>In the dataflow approach, the code that processes purchases would subscribe to a stream of exchange rate updates ahead of time, and record the current rate in a local database whenever it changes. When it comes to processing the purchase, it only needs to query the local database.</p>
+</li>
+</ul>
+<p>Subscribing to a stream of changes, rather than querying the current state when needed, brings us closer to a spreadsheet-like model of computation: when some piece of data changes, any derived data that depends on it can swiftly be updated.</p>
+<h4 id="Observing-Derived-State"><a href="#Observing-Derived-State" class="headerlink" title="Observing Derived State"></a>Observing Derived State</h4><p>…</p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/blog/tags/note/" rel="tag"># note</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/blog/2020/08/20/DDIA11/" rel="prev" title="Note for DDIA in Chapter 11">
+      <i class="fa fa-chevron-left"></i> Note for DDIA in Chapter 11
+    </a></div>
+      <div class="post-nav-item"></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+        </div>
+        
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Ray Chen</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/muse/" class="theme-link" rel="noopener" target="_blank">NexT.Muse</a>
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/blog/lib/anime.min.js"></script>
+
+<script src="/blog/js/utils.js"></script>
+
+<script src="/blog/js/motion.js"></script>
+
+
+<script src="/blog/js/schemes/muse.js"></script>
+
+
+<script src="/blog/js/next-boot.js"></script>
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>
