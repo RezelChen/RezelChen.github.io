@@ -237,7 +237,7 @@ Two-phase commit is called a *blocking* atomic commit protocol due to the fact t
 
 ##### XA transactions
 
-*X/Open XA* (short for eXtended Architecture) is a standard for implementing two- phase commit across heterogeneous technologies.
+*X/Open XA* (short for eXtended Architecture) is a standard for implementing two-phase commit across heterogeneous technologies.
 
 ##### Holding locks while in doubt
 
